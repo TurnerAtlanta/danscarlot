@@ -1,4 +1,4 @@
-name = "carlot-manager"
+name = "danscarlot"
 main = "src/index.ts"
 compatibility_date = "2025-02-11"
 compatibility_flags = ["nodejs_compat"]
@@ -35,7 +35,7 @@ name = "sync-queue"
 binding = "SYNC_QUEUE"
 
 [[queues.consumers]]
-name = "sync-queue"
+queue = "sync-queue"
 max_batch_size = 10
 max_batch_timeout = 30
 max_retries = 3
@@ -47,21 +47,16 @@ TRUECAR_DEALER_ID = ""
 KBB_DEALER_ID = ""
 CARGURUS_API_KEY = ""
 
-# Production routes
-[[routes]]
-pattern = "carlot-manager.yourdomain.com/*"
-custom_domain = true
-usage_model = "bundled"
+[[custom_domains]]
+domain = "danscarlot.turneratlanta.com"  
+zone_id = "621eb120d82997c4af1a61d0a6ecce9a" 
 
-# Staging routes  
-[[env.staging.routes]]
-pattern = "staging-carlot.yourdomain.com/*"
-custom_domain = true
-usage_model = "bundled"
+[functions]
+node_compat = true
 
 # Production environment
 [env.production]
-name = "carlot-manager-prod"
+name = "danscarlot"
 main = "src/index.ts"
 
 [[env.production.kv_namespaces]]
@@ -83,7 +78,7 @@ NODE_ENV = "production"
 
 # Staging environment
 [env.staging]
-name = "carlot-manager-staging"
+name = "danscarlot-staging"
 main = "src/index.ts"
 
 [[env.staging.kv_namespaces]]
