@@ -22,13 +22,13 @@ new_sqlite_classes = ["CarLotAgent"]
 
 [[kv_namespaces]]
 binding = "AUTH_KV"
-id = "YOUR_AUTH_KV_ID"
-preview_id = "YOUR_AUTH_KV_PREVIEW_ID"
+id = "029a6b1c13a24c89b0dbd39e4b5f6021"
+preview_id ="029a6b1c13a24c89b0dbd39e4b5f6021"
 
 [[kv_namespaces]]
 binding = "INTEGRATIONS_KV"
 id = "YOUR_INTEGRATIONS_KV_ID"
-preview_id = "YOUR_INTEGRATIONS_KV_PREVIEW_ID"
+preview_id = "e4d0112599154da2a2573d5a37926f08"
 
 [[queues.producers]]
 name = "sync-queue"
@@ -61,13 +61,13 @@ main = "src/index.ts"
 
 [[env.production.kv_namespaces]]
 binding = "AUTH_KV"
-id = "YOUR_AUTH_KV_PROD_ID"
-preview_id = "YOUR_AUTH_KV_PREVIEW_ID"
+id = "029a6b1c13a24c89b0dbd39e4b5f6021"
+preview_id = "029a6b1c13a24c89b0dbd39e4b5f6021"
 
 [[env.production.kv_namespaces]]
 binding = "INTEGRATIONS_KV"
-id = "YOUR_INTEGRATIONS_KV_PROD_ID"
-preview_id = "YOUR_INTEGRATIONS_KV_PREVIEW_ID"
+id = "e4d0112599154da2a2573d5a37926f08"
+preview_id = "e4d0112599154da2a2573d5a37926f08"
 
 [env.production.vars]
 WAYNE_REEVES_API_URL = "https://api.waynereeves.com/v1"
@@ -83,13 +83,13 @@ main = "src/index.ts"
 
 [[env.staging.kv_namespaces]]
 binding = "AUTH_KV"
-id = "YOUR_AUTH_KV_STAGING_ID"
-preview_id = "YOUR_AUTH_KV_PREVIEW_ID"
+id = "029a6b1c13a24c89b0dbd39e4b5f6021"
+preview_id = "029a6b1c13a24c89b0dbd39e4b5f6021"
 
 [[env.staging.kv_namespaces]]
 binding = "INTEGRATIONS_KV"
-id = "YOUR_INTEGRATIONS_KV_STAGING_ID"
-preview_id = "YOUR_INTEGRATIONS_KV_PREVIEW_ID"
+id = "e4d0112599154da2a2573d5a37926f08f"
+preview_id = "e4d0112599154da2a2573d5a37926f08"
 
 [env.staging.vars]
 WAYNE_REEVES_API_URL = "https://api.waynereeves.com/v1"
