@@ -1,7 +1,7 @@
 // public/app.tsx
-import React, { useState, useEffect } from ‘react’;
-import { useAgent } from ‘agents/react’;
-import { IntegrationsPanel } from ‘./integrations.tsx’;
+import React, { useState, useEffect } from "react";
+import { useAgent } from "agents/react";
+import { IntegrationsPanel } from "./integrations.tsx";
 
 interface Task {
 id: string;
@@ -9,7 +9,7 @@ title: string;
 description: string;
 assignee: string;
 dueDate: string;
-status: ‘pending’ | ‘in_progress’ | ‘completed’;
+status: "pending" | "in_progress" | "completed";
 createdBy: string;
 createdAt: string;
 }
@@ -24,7 +24,7 @@ purchasePrice: number;
 purchaseDate: string;
 salePrice?: number;
 saleDate?: string;
-status: ‘available’ | ‘sold’ | ‘reserved’;
+status: "available" | "sold" | "reserved";
 location: string;
 }
 
@@ -57,35 +57,35 @@ avgProfitPerVehicle: string;
 }
 
 function App() {
-const [activeTab, setActiveTab] = useState<‘tasks’ | ‘inventory’ | ‘analytics’ | ‘integrations’>(‘tasks’);
+const [activeTab, setActiveTab] = useState<"tasks" | "inventory" | "analytics" | "integrations">("tasks");
 const [tasks, setTasks] = useState<Task[]>([]);
 const [vehicles, setVehicles] = useState<Vehicle[]>([]);
 const [analytics, setAnalytics] = useState<Analytics | null>(null);
 const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
 const [services, setServices] = useState<Service[]>([]);
 const [comments, setComments] = useState<Comment[]>([]);
-const [userName, setUserName] = useState(’’);
+const [userName, setUserName] = useState("");
 
 const agent = useAgent({
-agent: ‘carlot-agent’,
-name: ‘main’,
+agent: "carlot-agent",
+name: "main",
 onMessage: (event) => {
 const data = JSON.parse(event.data);
-if (data.type === ‘task_update’) {
+if (data.type === "task_update") {
 loadTasks();
-} else if (data.type === ‘inventory_update’) {
+} else if (data.type === "inventory_update") {
 loadVehicles();
-} else if (data.type === ‘service_add’) {
+} else if (data.type === "service_add") {
 if (selectedVehicle) loadServices(selectedVehicle.id);
-} else if (data.type === ‘comment_add’) {
+} else if (data.type === "comment_add") {
 loadComments(data.payload.entityType, data.payload.entityId);
 }
 },
 });
 
 useEffect(() => {
-const name = localStorage.getItem(‘userName’) || prompt(‘Enter your name:’) || ‘Anonymous’;
-localStorage.setItem(‘userName’, name);
+const name = localStorage.getItem("userName") || prompt("Enter your name:") || "Anonymous";
+localStorage.setItem("userName", name);
 setUserName(name);
 
 
@@ -97,19 +97,19 @@ loadAnalytics();
 }, []);
 
 const loadTasks = async () => {
-const response = await fetch(’/api/tasks’);
+const response = await fetch("/api/tasks");
 const data = await response.json();
 setTasks(data);
 };
 
 const loadVehicles = async () => {
-const response = await fetch(’/api/vehicles’);
+const response = await fetch("/api/vehicles");
 const data = await response.json();
 setVehicles(data);
 };
 
 const loadAnalytics = async () => {
-const response = await fetch(’/api/analytics’);
+const response = await fetch("/api/analytics");
 const data = await response.json();
 setAnalytics(data);
 };
@@ -127,7 +127,7 @@ setComments(data);
 };
 
 const createTask = () => {
-const title = prompt(‘Task title:’);
+const title = prompt("Task title:");
 if (!title) return;
 
 
@@ -151,15 +151,15 @@ agent.send(JSON.stringify({ type: 'task_update', payload: task }));
 
 };
 
-const updateTaskStatus = (task: Task, newStatus: Task[‘status’]) => {
+const updateTaskStatus = (task: Task, newStatus: Task["status"]) => {
 agent.send(JSON.stringify({
-type: ‘task_update’,
+type: "task_update",
 payload: { …task, status: newStatus }
 }));
 };
 
 const createVehicle = () => {
-const vin = prompt(‘VIN:’);
+const vin = prompt("VIN:");
 if (!vin) return;
 
 
@@ -187,7 +187,7 @@ agent.send(JSON.stringify({ type: 'inventory_update', payload: vehicle }));
 };
 
 const markVehicleSold = (vehicle: Vehicle) => {
-const salePrice = parseFloat(prompt(‘Sale Price:’) || ‘0’);
+const salePrice = parseFloat(prompt("Sale Price:") || "0");
 if (salePrice === 0) return;
 
 
@@ -234,7 +234,7 @@ await fetch('/api/services', {
 };
 
 const addComment = (entityType: string, entityId: string) => {
-const comment = prompt(‘Add comment:’);
+const comment = prompt("Add comment:");
 if (!comment) return;
 
 
@@ -255,14 +255,14 @@ agent.send(JSON.stringify({ type: 'comment_add', payload }));
 const selectVehicle = (vehicle: Vehicle) => {
 setSelectedVehicle(vehicle);
 loadServices(vehicle.id);
-loadComments(‘vehicle’, vehicle.id);
+loadComments("vehicle", vehicle.id);
 };
 
 return (
-<div style={{ fontFamily: ‘-apple-system, BlinkMacSystemFont, “SF Pro Display”, sans-serif’, maxWidth: ‘1200px’, margin: ‘0 auto’, padding: ‘20px’ }}>
-<header style={{ marginBottom: ‘30px’, borderBottom: ‘1px solid #e5e5e5’, paddingBottom: ‘20px’ }}>
-<h1 style={{ fontSize: ‘34px’, fontWeight: ‘700’, margin: ‘0 0 10px 0’ }}>CarLot Manager</h1>
-<p style={{ color: ‘#666’, margin: 0 }}>Logged in as: {userName}</p>
+<div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, “SF Pro Display”, sans-serif", maxWidth: "1200px", margin: "0 auto", padding: "20px" }}>
+<header style={{ marginBottom: "30px", borderBottom: "1px solid #e5e5e5", paddingBottom: "20px" }}>
+<h1 style={{ fontSize: "34px", fontWeight: "700", margin: "0 0 10px 0" }}>CarLot Manager</h1>
+<p style={{ color: "#666", margin: 0 }}>Logged in as: {userName}</p>
 </header>
 
 

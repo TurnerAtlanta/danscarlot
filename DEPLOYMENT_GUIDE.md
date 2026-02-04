@@ -539,7 +539,7 @@ Update wrangler.jsonc:
 
 -----
 
-## What’s Next?
+## What"s Next?
 
 After successful deployment:
 

@@ -18,8 +18,8 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250101.0",
+    "eslint": "^9.0.0",
     "typescript": "^5.7.2",
-    "wrangler": "^3.102.0",
-    "eslint": "^9.0.0"
+    "wrangler": "^4.62.0"
   }
 }
