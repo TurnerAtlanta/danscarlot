@@ -1,0 +1,66 @@
+// wrangler.jsonc
+{
+  "name": "carlot-manager",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-02-11",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "assets": {
+    "directory": "./public/",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "CARLOT_AGENT",
+        "class_name": "CarLotAgent"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["CarLotAgent"]
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "AUTH_KV",
+      "id": "YOUR_AUTH_KV_ID",
+      "preview_id": "YOUR_AUTH_KV_PREVIEW_ID"
+    },
+    {
+      "binding": "INTEGRATIONS_KV",
+      "id": "YOUR_INTEGRATIONS_KV_ID",
+      "preview_id": "YOUR_INTEGRATIONS_KV_PREVIEW_ID"
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "name": "sync-queue",
+        "binding": "SYNC_QUEUE"
+      }
+    ],
+    "consumers": [
+      {
+        "name": "sync-queue",
+        "max_batch_size": 10,
+        "max_batch_timeout": 30,
+        "max_retries": 3,
+        "dead_letter_queue": "sync-dlq"
+      }
+    ]
+  },
+  "vars": {
+    "WAYNE_REEVES_API_URL": "https://api.waynereeves.com/v1",
+    "TRUECAR_DEALER_ID": "",
+    "KBB_DEALER_ID": "",
+    "CARGURUS_API_KEY": ""
+  }
+}
+
