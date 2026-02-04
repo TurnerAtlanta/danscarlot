@@ -16,7 +16,8 @@
     "agents": "latest",
     "apt-get": "^0.1.0",
     "brew": "^0.0.8",
-    "hono": "^4.0.0"
+    "hono": "^4.0.0",
+    "node": "^25.6.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250101.0",
