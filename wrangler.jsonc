@@ -1,4 +1,3 @@
-// wrangler.jsonc
 {
   "name": "carlot-manager",
   "main": "src/index.ts",
