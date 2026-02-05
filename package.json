@@ -1,9 +1,9 @@
 {
-  "name": "carlot-manager",
+  "name": "danscarlot",
   "version": "1.0.0",
   "description": "Cloudflare Workers + Hono + Agents backend for managing car inventory, customers, and deals",
   "type": "module",
-  "main": "src/worker.ts",
+  "main": "clent/src/.ts",
   "scripts": {
     "dev": "npm run build && tsx watch worker/index.ts && wrangler deploy",
     "build": "vite build",
