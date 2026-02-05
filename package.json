@@ -5,14 +5,12 @@
   "type": "module",
   "main": "clent/src/.ts",
   "scripts": {
-    "dev": "npm run build && tsx watch worker/index.ts && wrangler deploy",
-    "build": "vite build",
-    "start": "NODE_ENV=production tsx worker/index.ts",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint \"src/**/*.{ts,tsx}\" || echo \"lint optional\"",
-    "deploy": "wrangler deploy",
-    "deploy:staging": "wrangler deploy --env staging",
-    "deploy:prod": "wrangler deploy --env production"
+    "dev": "vite",
+    "build": "vite build && wrangler deploy --dry-run",
+    "preview": "vite preview",
+    "deploy": "vite build && wrangler deploy",
+    "dev:worker": "wrangler dev",
+    "tail": "wrangler tail --format pretty"
   },
   "dependencies": {
     "agents": "^0.2.32",
