@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Cloudflare Workers + Hono + Agents backend for managing car inventory, customers, and deals",
   "type": "module",
-  "main": "clent/src/.ts",
+  "main": "index.html",
   "scripts": {
     "dev": "vite",
     "build": "vite build && wrangler deploy --dry-run",
