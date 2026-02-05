@@ -5,14 +5,21 @@
   "type": "module",
   "main": "src/worker.ts",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "npm run build && tsx watch worker/index.ts && wrangler deploy",
+    "build": "vite build",
+    "start": "NODE_ENV=production tsx worker/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" || echo \"lint optional\"",
     "deploy": "wrangler deploy",
     "deploy:staging": "wrangler deploy --env staging",
-    "deploy:prod": "wrangler deploy --env production",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint \"src/**/*.{ts,tsx}\" || echo \"lint optional\""
+    "deploy:prod": "wrangler deploy --env production"
   },
   "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^4.22.1",
+    "pg": "^8.18.0",
+    "uuid": "^10.0.0",
+    "ws": "^8.19.0",
     "agents": "latest",
     "apt-get": "^0.1.0",
     "brew": "^0.0.8",
@@ -22,7 +29,19 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250101.0",
     "eslint": "^9.0.0",
-    "typescript": "^5.7.2",
-    "wrangler": "^4.62.0"
+    "wrangler": "^4.62.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/pg": "^8.16.0",
+    "@types/react": "^18.3.27",
+    "@types/react-dom": "^18.3.7",
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.18.1",
+    "@vitejs/plugin-react": "^4.7.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vite": "^6.4.1"
   }
 }
