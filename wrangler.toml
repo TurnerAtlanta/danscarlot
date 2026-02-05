@@ -1,5 +1,5 @@
 name = "danscarlot"
-main = "client/src/index.ts"
+main = "src/index.ts"
 compatibility_date = "2025-02-11"
 compatibility_flags = ["nodejs_compat"]
 
@@ -23,11 +23,11 @@ new_sqlite_classes = ["CarLotAgent"]
 [[kv_namespaces]]
 binding = "AUTH_KV"
 id = "029a6b1c13a24c89b0dbd39e4b5f6021"
-preview_id ="029a6b1c13a24c89b0dbd39e4b5f6021"
+preview_id = "029a6b1c13a24c89b0dbd39e4b5f6021"
 
 [[kv_namespaces]]
 binding = "INTEGRATIONS_KV"
-id = "YOUR_INTEGRATIONS_KV_ID"
+id = "e4d0112599154da2a2573d5a37926f08"
 preview_id = "e4d0112599154da2a2573d5a37926f08"
 
 [[queues.producers]]
@@ -45,55 +45,18 @@ dead_letter_queue = "sync-dlq"
 WAYNE_REEVES_API_URL = "https://api.waynereeves.com/v1"
 TRUECAR_DEALER_ID = ""
 KBB_DEALER_ID = ""
-CARGURUS_API_KEY = ""
 
-[[custom_domains]]
-domain = "danscarlot.turneratlanta.com"  
-zone_id = "621eb120d82997c4af1a61d0a6ecce9a" 
+# Custom domain configuration
+[routes]
+pattern = "danscarlot.turneratlanta.com/*"
+zone_id = "621eb120d82997c4af1a61d0a6ecce9a"
 
-[functions]
-node_compat = true
-
-# Production environment
+# Production environment (optional - use for separate prod config)
 [env.production]
-name = "danscarlot"
-main = "src/index.ts"
+name = "danscarlot-prod"
+vars = { NODE_ENV = "production" }
 
-[[env.production.kv_namespaces]]
-binding = "AUTH_KV"
-id = "029a6b1c13a24c89b0dbd39e4b5f6021"
-preview_id = "029a6b1c13a24c89b0dbd39e4b5f6021"
-
-[[env.production.kv_namespaces]]
-binding = "INTEGRATIONS_KV"
-id = "e4d0112599154da2a2573d5a37926f08"
-preview_id = "e4d0112599154da2a2573d5a37926f08"
-
-[env.production.vars]
-WAYNE_REEVES_API_URL = "https://api.waynereeves.com/v1"
-TRUECAR_DEALER_ID = ""
-KBB_DEALER_ID = ""
-CARGURUS_API_KEY = ""
-NODE_ENV = "production"
-
-# Staging environment
+# Staging environment (optional - use for testing)
 [env.staging]
 name = "danscarlot-staging"
-main = "src/index.ts"
-
-[[env.staging.kv_namespaces]]
-binding = "AUTH_KV"
-id = "029a6b1c13a24c89b0dbd39e4b5f6021"
-preview_id = "029a6b1c13a24c89b0dbd39e4b5f6021"
-
-[[env.staging.kv_namespaces]]
-binding = "INTEGRATIONS_KV"
-id = "e4d0112599154da2a2573d5a37926f08f"
-preview_id = "e4d0112599154da2a2573d5a37926f08"
-
-[env.staging.vars]
-WAYNE_REEVES_API_URL = "https://api.waynereeves.com/v1"
-TRUECAR_DEALER_ID = ""
-KBB_DEALER_ID = ""
-CARGURUS_API_KEY = ""
-NODE_ENV = "staging"
+vars = { NODE_ENV = "staging" }
