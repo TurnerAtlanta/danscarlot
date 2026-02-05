@@ -15,21 +15,19 @@
     "deploy:prod": "wrangler deploy --env production"
   },
   "dependencies": {
-    "cors": "^2.8.6",
-    "express": "^4.22.1",
-    "pg": "^8.18.0",
-    "uuid": "^10.0.0",
-    "ws": "^8.19.0",
-    "agents": "latest",
+    "agents": "^0.2.32",
     "apt-get": "^0.1.0",
     "brew": "^0.0.8",
+    "cors": "^2.8.6",
+    "express": "^4.22.1",
     "hono": "^4.0.0",
-    "node": "^25.6.0"
+    "node": "^25.6.0",
+    "pg": "^8.18.0",
+    "uuid": "^10.0.0",
+    "ws": "^8.19.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250101.0",
-    "eslint": "^9.0.0",
-    "wrangler": "^4.62.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/pg": "^8.16.0",
@@ -38,10 +36,12 @@
     "@types/uuid": "^10.0.0",
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^4.7.0",
+    "eslint": "^9.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vite": "^6.4.1"
+    "vite": "^6.4.1",
+    "wrangler": "^4.62.0"
   }
 }
