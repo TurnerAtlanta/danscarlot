@@ -1,5 +1,5 @@
 name = "danscarlot"
-main = "src/index.ts"
+main = "clent/src/index.ts"
 compatibility_date = "2025-02-11"
 compatibility_flags = ["nodejs_compat"]
 
