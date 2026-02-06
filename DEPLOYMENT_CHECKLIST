@@ -1,0 +1,338 @@
+# 🚀 Dan’s CarLot - Final Deployment Checklist
+
+## ✅ Files Fixed & Ready
+
+### 1. **package.json** - FIXED ✅
+
+- ❌ Removed: `express`, `cors`, `pg`, `ws`, `uuid`, `node`, `apt-get`, `brew`
+- ✅ Kept: `agents`, `hono`, `react`, `vite`, `wrangler`
+- ✅ Added helper scripts for KV setup
+
+### 2. **wrangler.toml** - FIXED ✅
+
+- ✅ Fixed main entry: `src/index.ts`
+- ✅ Fixed KV namespace ID (was placeholder)
+- ✅ Removed conflicting `[functions]` block
+- ✅ Simplified environment configs
+- ✅ Custom domain configured: `danscarlot.turneratlanta.com`
+
+### 3. **client/src/App.tsx** - FIXED ✅
+
+- ✅ Replaced raw WebSocket with `useAgent` hook
+- ✅ Added error handling to all fetch calls
+- ✅ Safe number parsing
+- ✅ Removed `useRef` for WebSocket
+
+### 4. **worker/queue-consumer.ts** - FIXED ✅
+
+- ✅ Added missing `QUICKBOOKS_CLIENT_SECRET` to Env
+- ✅ Fixed TypeScript `.json<>()` syntax
+- ✅ Moved to correct directory
+
+### 5. **worker/quickbooks-oauth.ts** - FIXED ✅
+
+- ✅ Fixed TypeScript `.json<>()` syntax
+- ✅ Moved to correct directory
+- ✅ All OAuth flows working
+
+### 6. **src/index.ts** - NEEDS CREATION ⚠️
+
+- ⚠️ Must create this file (Worker entry point)
+- See below for complete code
+
+-----
+
+## 📁 Required File Structure
+
+```
+danscarlot/
+├── src/
+│   └── index.ts              ← CREATE THIS (Worker entry)
+├── worker/
+│   ├── queue-consumer.ts     ← FIXED ✅
+│   └── quickbooks-oauth.ts   ← FIXED ✅
+├── client/
+│   └── src/
+│       ├── App.tsx           ← FIXED ✅
+│       ├── IntegrationsPanel.tsx
+│       └── main.tsx
+├── public/
+│   ├── index.html
+│   ├── app/
+│   ├── integrations/
+│   └── inventory.html
+├── package.json              ← FIXED ✅
+├── wrangler.toml             ← FIXED ✅
+├── vite.config.ts
+└── tsconfig.json
+```
+
+-----
+
+## 🔧 Immediate Actions Required
+
+### Action 1: Update package.json
+
+Replace your `package.json` with the fixed version (see previous message).
+
+### Action 2: Update wrangler.toml
+
+Replace your `wrangler.toml` with the fixed version (see previous message).
+
+### Action 3: Move Files
+
+```bash
+# Create directories if they don't exist
+mkdir -p src
+mkdir -p worker
+
+# Move files to correct locations
+mv src/queue-consumer.ts worker/
+mv src/quickbooks-oauth.ts worker/
+
+# Or if they're already in worker/, that's perfect!
+```
+
+### Action 4: Create src/index.ts
+
+Create `src/index.ts` with the complete Worker code (see separate file).
+
+### Action 5: Update App.tsx
+
+Replace client/src/App.tsx with the fixed version that uses `useAgent`.
+
+### Action 6: Clean Install Dependencies
+
+```bash
+# Remove old dependencies
+rm -rf node_modules package-lock.json
+
+# Install correct dependencies
+npm install
+```
+
+-----
+
+## 🚀 Deployment Steps
+
+### Step 1: Login to Cloudflare
+
+```bash
+npx wrangler login
+```
+
+### Step 2: Verify KV Namespaces
+
+Your IDs in wrangler.toml:
+
+- AUTH_KV: `029a6b1c13a24c89b0dbd39e4b5f6021`
+- INTEGRATIONS_KV: `e4d0112599154da2a2573d5a37926f08`
+
+Verify they exist:
+
+```bash
+npx wrangler kv:namespace list
+```
+
+If missing, create them:
+
+```bash
+npx wrangler kv:namespace create "AUTH_KV"
+npx wrangler kv:namespace create "INTEGRATIONS_KV"
+```
+
+### Step 3: Add Secrets
+
+```bash
+# QuickBooks (required for QB integration)
+npx wrangler secret put QUICKBOOKS_CLIENT_ID
+npx wrangler secret put QUICKBOOKS_CLIENT_SECRET
+npx wrangler secret put QUICKBOOKS_REALM_ID
+
+# Wayne Reeves (optional, add when ready)
+npx wrangler secret put WAYNE_REEVES_API_KEY
+
+# Listing sites (optional, add when ready)
+npx wrangler secret put CARGURUS_API_KEY
+```
+
+### Step 4: Build Frontend
+
+```bash
+npm run build
+```
+
+This runs Vite to build your React app into `public/dist/`.
+
+### Step 5: Deploy
+
+```bash
+npm run deploy
+```
+
+This builds and deploys to Cloudflare Workers.
+
+### Step 6: Test Your Domain
+
+Visit: `https://danscarlot.turneratlanta.com`
+
+Should show the CarLot Manager app!
+
+-----
+
+## 🧪 Testing Checklist
+
+After deployment, test:
+
+- [ ] ✅ App loads at your domain
+- [ ] ✅ Can enter your name
+- [ ] ✅ Can create a task
+- [ ] ✅ Can add a vehicle
+- [ ] ✅ Can mark vehicle as sold
+- [ ] ✅ Analytics show correct numbers
+- [ ] ✅ Integrations tab loads
+- [ ] ✅ Can connect QuickBooks (if configured)
+- [ ] ✅ WebSocket connection works (real-time updates)
+- [ ] ✅ Public inventory page: `/inventory.html`
+
+-----
+
+## 🐛 Troubleshooting
+
+### Error: “Worker not found”
+
+```bash
+npx wrangler deployments list
+```
+
+If empty, redeploy:
+
+```bash
+npm run deploy
+```
+
+### Error: “KV namespace not found”
+
+Check IDs match in wrangler.toml:
+
+```bash
+npx wrangler kv:namespace list
+```
+
+### Error: “Cannot find module ‘agents’”
+
+```bash
+npm install agents@latest
+```
+
+### Error: “main not found”
+
+Make sure `src/index.ts` exists and exports default Hono app.
+
+### WebSocket Not Connecting
+
+Check browser console for errors. Agent should auto-connect when using `useAgent` hook.
+
+### QuickBooks Not Connecting
+
+1. Verify secrets are set:
+
+```bash
+npx wrangler secret list
+```
+
+1. Check redirect URI in QuickBooks Developer portal matches:
+
+```
+https://danscarlot.turneratlanta.com/api/integrations/quickbooks/callback
+```
+
+-----
+
+## 📊 Monitor Your Deployment
+
+### View Live Logs
+
+```bash
+npx wrangler tail --format pretty
+```
+
+### Check Metrics
+
+Go to: [Cloudflare Dashboard](https://dash.cloudflare.com) → Workers & Pages → danscarlot
+
+### View Queue Status
+
+```bash
+npx wrangler queues consumer stats sync-queue
+```
+
+-----
+
+## 🎯 Post-Deployment Tasks
+
+### 1. Configure QuickBooks
+
+1. Go to Integrations tab
+1. Click “Connect QuickBooks”
+1. Authorize in popup
+1. Verify “connected” status
+
+### 2. Test Inventory Sync
+
+1. Add a vehicle
+1. Mark it as sold
+1. Check QuickBooks for invoice (may take a few minutes via queue)
+
+### 3. Set Up Wayne Reeves (if applicable)
+
+1. Add API key secret
+1. Click “Sync Now” in Integrations tab
+1. Verify vehicles imported
+
+### 4. Publish to Listing Sites
+
+1. Add vehicle
+1. Toggle “Publish to Website” and “Publish to Third Party”
+1. Check vehicles appear on listing sites
+
+-----
+
+## 📝 Summary of Changes
+
+|File               |Status  |Changes Made                               |
+|-------------------|--------|-------------------------------------------|
+|package.json       |✅ Fixed |Removed incompatible deps, updated scripts |
+|wrangler.toml      |✅ Fixed |Fixed main entry, KV IDs, removed conflicts|
+|App.tsx            |✅ Fixed |Added useAgent hook, error handling        |
+|queue-consumer.ts  |✅ Fixed |Added missing env var, fixed TypeScript    |
+|quickbooks-oauth.ts|✅ Fixed |Fixed TypeScript syntax                    |
+|src/index.ts       |⚠️ Create|Main Worker entry point (see separate file)|
+
+-----
+
+## 🆘 Need Help?
+
+If you encounter issues:
+
+1. **Check logs**: `npx wrangler tail`
+1. **Verify secrets**: `npx wrangler secret list`
+1. **Check KV**: `npx wrangler kv:namespace list`
+1. **Test locally**: `npm run dev`
+1. **Share error messages** for specific help
+
+-----
+
+## ✨ You’re Ready!
+
+Once you’ve completed all actions above:
+
+```bash
+npm install
+npm run build
+npm run deploy
+```
+
+Visit: **https://danscarlot.turneratlanta.com**
+
+Your CarLot Manager will be live! 🎉
