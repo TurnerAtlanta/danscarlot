@@ -16,7 +16,7 @@
     "cf:kv:preview": "wrangler kv:namespace create INTEGRATIONS_KV --preview && wrangler kv:namespace create AUTH_KV --preview"
   },
   "dependencies": {
-    "agents": "^0.2.32",
+    "agents": "^0.3.10",
     "hono": "^4.0.0"
   },
   "devDependencies": {
