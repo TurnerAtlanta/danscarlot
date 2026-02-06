@@ -31,7 +31,7 @@ id = "e4d0112599154da2a2573d5a37926f08"
 preview_id = "e4d0112599154da2a2573d5a37926f08"
 
 [[queues.producers]]
-name = "sync-queue"
+queue = "sync-queue"
 binding = "SYNC_QUEUE"
 
 [[queues.consumers]]
@@ -47,8 +47,16 @@ TRUECAR_DEALER_ID = ""
 KBB_DEALER_ID = ""
 
 # Custom domain configuration
-[routes]
+[[routes]]
 pattern = "danscarlot.turneratlanta.com/*"
+zone_id = "621eb120d82997c4af1a61d0a6ecce9a"
+
+[[routes]]
+pattern = "api.danscarlot.turneratlanta.com/*"
+zone_id = "621eb120d82997c4af1a61d0a6ecce9a"
+
+[[routes]]
+pattern = "*.danscarlot.turneratlanta.com/*"  
 zone_id = "621eb120d82997c4af1a61d0a6ecce9a"
 
 # Production environment (optional - use for separate prod config)
