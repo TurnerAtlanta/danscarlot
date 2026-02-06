@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+// client/src/App.tsx
+import React, { useState, useEffect } from 'react';
+import { useAgent } from 'agents/react';
 import { IntegrationsPanel } from './IntegrationsPanel';
 
 interface Task {
@@ -63,19 +65,14 @@ function App() {
   const [services, setServices] = useState<Service[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [userName, setUserName] = useState('');
-  const wsRef = useRef<WebSocket | null>(null);
 
-  useEffect(() => {
-    const name = localStorage.getItem('userName') || prompt('Enter your name:') || 'Anonymous';
-    localStorage.setItem('userName', name);
-    setUserName(name);
-
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${wsProtocol}//${window.location.host}/ws`);
-    wsRef.current = ws;
-
-    ws.onmessage = (event) => {
+  // Connect to CarLot Agent via WebSocket using useAgent hook
+  const agent = useAgent({
+    agent: 'carlot-agent',
+    name: 'main',
+    onMessage: (event) => {
       const data = JSON.parse(event.data);
+
       if (data.type === 'state') {
         setTasks(data.data.tasks || []);
         setVehicles(data.data.vehicles || []);
@@ -86,56 +83,84 @@ function App() {
       } else if (data.type === 'service_add') {
         if (selectedVehicle) loadServices(selectedVehicle.id);
       } else if (data.type === 'comment_add') {
-        loadComments(data.payload.entityType, data.payload.entityId);
+        loadComments(data.payload.entity_type, data.payload.entity_id);
       }
-    };
+    },
+    onOpen: () => {
+      console.log('Connected to CarLot Agent');
+    },
+    onClose: () => {
+      console.log('Disconnected from CarLot Agent');
+    }
+  });
 
-    ws.onerror = () => {
-      loadTasks();
-      loadVehicles();
-    };
+  useEffect(() => {
+    const name = localStorage.getItem('userName') || prompt('Enter your name:') || 'Anonymous';
+    localStorage.setItem('userName', name);
+    setUserName(name);
 
+    loadTasks();
+    loadVehicles();
     loadAnalytics();
-
-    return () => {
-      ws.close();
-    };
   }, []);
 
   const loadTasks = async () => {
-    const response = await fetch('/api/tasks');
-    const data = await response.json();
-    setTasks(data);
+    try {
+      const response = await fetch('/api/tasks');
+      if (!response.ok) throw new Error('Failed to load tasks');
+      const data = await response.json();
+      setTasks(data);
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+    }
   };
 
   const loadVehicles = async () => {
-    const response = await fetch('/api/vehicles');
-    const data = await response.json();
-    setVehicles(data);
+    try {
+      const response = await fetch('/api/vehicles');
+      if (!response.ok) throw new Error('Failed to load vehicles');
+      const data = await response.json();
+      setVehicles(data);
+    } catch (error) {
+      console.error('Error loading vehicles:', error);
+    }
   };
 
   const loadAnalytics = async () => {
-    const response = await fetch('/api/analytics');
-    const data = await response.json();
-    setAnalytics(data);
+    try {
+      const response = await fetch('/api/analytics');
+      if (!response.ok) throw new Error('Failed to load analytics');
+      const data = await response.json();
+      setAnalytics(data);
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+    }
   };
 
   const loadServices = async (vehicleId: string) => {
-    const response = await fetch(`/api/services?vehicleId=${vehicleId}`);
-    const data = await response.json();
-    setServices(data);
+    try {
+      const response = await fetch(`/api/services?vehicleId=${vehicleId}`);
+      if (!response.ok) throw new Error('Failed to load services');
+      const data = await response.json();
+      setServices(data);
+    } catch (error) {
+      console.error('Error loading services:', error);
+    }
   };
 
   const loadComments = async (entityType: string, entityId: string) => {
-    const response = await fetch(`/api/comments?entityType=${entityType}&entityId=${entityId}`);
-    const data = await response.json();
-    setComments(data);
+    try {
+      const response = await fetch(`/api/comments?entityType=${entityType}&entityId=${entityId}`);
+      if (!response.ok) throw new Error('Failed to load comments');
+      const data = await response.json();
+      setComments(data);
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    }
   };
 
   const sendMessage = (message: any) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(message));
-    }
+    agent.send(JSON.stringify(message));
   };
 
   const createTask = () => {
@@ -146,14 +171,15 @@ function App() {
     const assignee = prompt('Assign to:') || 'Unassigned';
     const dueDate = prompt('Due date (YYYY-MM-DD):') || new Date().toISOString().split('T')[0];
 
-    const task = {
+    const task: Task = {
       id: crypto.randomUUID(),
       title,
       description: description || '',
       assignee,
-      dueDate,
+      due_date: dueDate,
       status: 'pending',
-      createdBy: userName,
+      created_by: userName,
+      created_at: new Date().toISOString(),
     };
 
     sendMessage({ type: 'task_update', payload: task });
@@ -163,7 +189,7 @@ function App() {
   const updateTaskStatus = (task: Task, newStatus: Task['status']) => {
     sendMessage({
       type: 'task_update',
-      payload: { ...task, dueDate: task.due_date, createdBy: task.created_by, status: newStatus }
+      payload: { ...task, status: newStatus }
     });
     setTimeout(loadTasks, 500);
   };
@@ -174,18 +200,18 @@ function App() {
 
     const make = prompt('Make:') || '';
     const model = prompt('Model:') || '';
-    const year = parseInt(prompt('Year:') || '2020');
+    const year = parseInt(prompt('Year:') || '2020', 10);
     const purchasePrice = parseFloat(prompt('Purchase Price:') || '0');
     const location = prompt('Location:') || 'Lot A';
 
-    const vehicle = {
+    const vehicle: Vehicle = {
       id: crypto.randomUUID(),
       vin,
       make,
       model,
       year,
-      purchasePrice,
-      purchaseDate: new Date().toISOString(),
+      purchase_price: purchasePrice,
+      purchase_date: new Date().toISOString(),
       status: 'available',
       location
     };
@@ -202,14 +228,13 @@ function App() {
       type: 'inventory_update',
       payload: {
         ...vehicle,
-        purchasePrice: vehicle.purchase_price,
-        purchaseDate: vehicle.purchase_date,
         status: 'sold',
-        salePrice,
-        saleDate: new Date().toISOString()
+        sale_price: salePrice,
+        sale_date: new Date().toISOString()
       }
     });
     setTimeout(loadVehicles, 500);
+    setTimeout(loadAnalytics, 1000);
   };
 
   const addService = async () => {
@@ -222,32 +247,39 @@ function App() {
     const cost = parseFloat(prompt('Cost:') || '0');
     const serviceDate = prompt('Service Date (YYYY-MM-DD):') || new Date().toISOString().split('T')[0];
 
-    const service = {
+    const service: Service = {
       id: crypto.randomUUID(),
-      vehicleId: selectedVehicle.id,
-      serviceType,
+      vehicle_id: selectedVehicle.id,
+      service_type: serviceType,
       description,
       cost,
-      serviceDate
+      service_date: serviceDate
     };
 
-    await fetch('/api/services', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(service)
-    });
-    loadServices(selectedVehicle.id);
+    try {
+      const response = await fetch('/api/services', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(service)
+      });
+      if (response.ok) {
+        loadServices(selectedVehicle.id);
+        loadAnalytics();
+      }
+    } catch (error) {
+      console.error('Error adding service:', error);
+    }
   };
 
   const addComment = (entityType: string, entityId: string) => {
     const comment = prompt('Add comment:');
     if (!comment) return;
 
-    const payload = {
+    const payload: Omit<Comment, 'created_at'> = {
       id: crypto.randomUUID(),
-      entityType,
-      entityId,
-      userName,
+      entity_type: entityType,
+      entity_id: entityId,
+      user_name: userName,
       comment,
     };
 
@@ -327,7 +359,7 @@ function App() {
                     <h3 style={{ margin: '0 0 8px 0', fontSize: '17px', fontWeight: '600' }}>{task.title}</h3>
                     <p style={{ margin: '0 0 8px 0', color: '#666', fontSize: '15px' }}>{task.description}</p>
                     <div style={{ fontSize: '13px', color: '#999' }}>
-                      Assigned to: {task.assignee} | Due: {task.due_date} | Created by: {task.created_by}
+                      Assigned to: {task.assignee} • Due: {task.due_date} • Created by: {task.created_by}
                     </div>
                   </div>
                   <select
@@ -361,7 +393,7 @@ function App() {
                     fontSize: '13px'
                   }}
                 >
-                  Add Comment
+                  💬 Add Comment
                 </button>
               </div>
             ))}
@@ -416,7 +448,7 @@ function App() {
                       <p style={{ margin: '0 0 4px 0', color: '#666', fontSize: '13px' }}>Location: {vehicle.location}</p>
                       <p style={{ margin: '0', fontSize: '15px', fontWeight: '500' }}>
                         Purchase: ${Number(vehicle.purchase_price || 0).toLocaleString()}
-                        {vehicle.sale_price && ` - Sale: $${Number(vehicle.sale_price).toLocaleString()}`}
+                        {vehicle.sale_price && ` → Sale: $${Number(vehicle.sale_price).toLocaleString()}`}
                       </p>
                     </div>
                     <span
@@ -502,7 +534,7 @@ function App() {
                           {service.description}
                         </div>
                         <div style={{ fontSize: '13px', color: '#999' }}>
-                          ${Number(service.cost).toLocaleString()} | {service.service_date}
+                          ${Number(service.cost || 0).toLocaleString()} • {service.service_date}
                         </div>
                       </div>
                     ))}
@@ -572,7 +604,7 @@ function App() {
                 Total Revenue
               </div>
               <div style={{ fontSize: '28px', fontWeight: '700', color: '#34C759' }}>
-                ${Number(analytics.totalRevenue).toLocaleString()}
+                ${Number(analytics.totalRevenue || 0).toLocaleString()}
               </div>
             </div>
 
@@ -581,7 +613,7 @@ function App() {
                 Total Costs
               </div>
               <div style={{ fontSize: '28px', fontWeight: '700', color: '#FF3B30' }}>
-                ${Number(analytics.totalCost).toLocaleString()}
+                ${Number(analytics.totalCost || 0).toLocaleString()}
               </div>
             </div>
 
@@ -589,8 +621,8 @@ function App() {
               <div style={{ fontSize: '13px', color: '#999', marginBottom: '8px', fontWeight: '600', textTransform: 'uppercase' }}>
                 Net Profit
               </div>
-              <div style={{ fontSize: '28px', fontWeight: '700', color: Number(analytics.profit) >= 0 ? '#34C759' : '#FF3B30' }}>
-                ${Number(analytics.profit).toLocaleString()}
+              <div style={{ fontSize: '28px', fontWeight: '700', color: Number(analytics.profit || 0) >= 0 ? '#34C759' : '#FF3B30' }}>
+                ${Number(analytics.profit || 0).toLocaleString()}
               </div>
             </div>
 
@@ -644,7 +676,7 @@ function App() {
               fontWeight: '500'
             }}
           >
-            Refresh Analytics
+            🔄 Refresh Analytics
           </button>
         </div>
       )}
@@ -657,3 +689,4 @@ function App() {
 }
 
 export default App;
+
