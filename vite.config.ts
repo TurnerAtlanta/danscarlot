@@ -9,11 +9,8 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: 'public/index.html'  // Your React app entry
-      }
-    }
+        main: resolve(__dirname, 'index.html'),
+      },
+    },
   },
-  server: {
-    port: 5173
-  }
 })
