@@ -1,16 +1,26 @@
 
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { cloudflare } from '@cloudflare/vite-plugin';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    cloudflare({
+    })
+  ],
   build: {
     outDir: 'public/dist',
     emptyOutDir: true,
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html'),
+    sourcemap: true,
+    main: 'public/index.html'
       },
-    },
-  },
-})
+  resolve: {
+    alias: {
+         '@': '/src'
+        },
+      },
+  preview: {
+    port: 8788
+  }
+});
