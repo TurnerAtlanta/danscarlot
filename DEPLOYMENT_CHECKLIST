@@ -67,52 +67,6 @@ danscarlot/
 └── tsconfig.json
 ```
 
------
-
-## 🔧 Immediate Actions Required
-
-### Action 1: Update package.json
-
-Replace your `package.json` with the fixed version (see previous message).
-
-### Action 2: Update wrangler.toml
-
-Replace your `wrangler.toml` with the fixed version (see previous message).
-
-### Action 3: Move Files
-
-```bash
-# Create directories if they don't exist
-mkdir -p src
-mkdir -p worker
-
-# Move files to correct locations
-mv src/queue-consumer.ts worker/
-mv src/quickbooks-oauth.ts worker/
-
-# Or if they're already in worker/, that's perfect!
-```
-
-### Action 4: Create src/index.ts
-
-Create `src/index.ts` with the complete Worker code (see separate file).
-
-### Action 5: Update App.tsx
-
-Replace client/src/App.tsx with the fixed version that uses `useAgent`.
-
-### Action 6: Clean Install Dependencies
-
-```bash
-# Remove old dependencies
-rm -rf node_modules package-lock.json
-
-# Install correct dependencies
-npm install
-```
-
------
-
 ## 🚀 Deployment Steps
 
 ### Step 1: Login to Cloudflare
