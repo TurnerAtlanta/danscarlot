@@ -17,7 +17,8 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "types": ["@cloudflare/workers-types"]
   },
-  "include": ["client/src", "worker"]
+  "include": ["client/src", "worker", "src/**/*", "worker-configuration.d.ts"]
 }
