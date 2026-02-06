@@ -65,6 +65,7 @@ async function syncVehicleToExternalSystems(msg: SyncMessage, env: Env): Promise
     if (!vehicleResp.ok) {
       throw new Error(`CarLotAgent vehicle lookup failed: ${vehicleResp.status}`);
     }
+
     const vehicle = (await vehicleResp.json()) as any;
 
     if (!vehicle.external_dms_id) {
@@ -193,7 +194,6 @@ async function refreshQuickBooksToken(env: Env): Promise<void> {
       expires_in: number;
     };
 
-    // Intuit returns a *new* refresh token on each refresh; always store the latest [web:21][web:24].
     await env.INTEGRATIONS_KV.put('quickbooks_access_token', tokens.access_token, {
       expirationTtl: tokens.expires_in ?? 3600,
     });
@@ -204,89 +204,4 @@ async function refreshQuickBooksToken(env: Env): Promise<void> {
     console.error('Token refresh error:', error);
     // Do not throw, to avoid infinite retries if credentials are bad
   }
-}
-
-}
-}
-
-async function syncExpenseToQuickBooks(msg: SyncMessage, env: Env): Promise<void> {
-if (!env.QUICKBOOKS_CLIENT_ID || !msg.serviceId) return;
-
-try {
-const accessToken = await env.INTEGRATIONS_KV.get(‘quickbooks_access_token’);
-if (!accessToken) {
-console.error(‘QuickBooks not authenticated’);
-return;
-}
-
-
-const expense = {
-  PaymentType: 'Cash',
-  AccountRef: { value: '35' },
-  Line: [{
-    Amount: msg.amount,
-    DetailType: 'AccountBasedExpenseLineDetail',
-    AccountBasedExpenseLineDetail: {
-      AccountRef: { value: '35' }
-    },
-    Description: `Service expense - Vehicle service`
-  }],
-  TxnDate: new Date().toISOString().split('T')[0]
-};
-
-const response = await fetch(
-  `https://quickbooks.api.intuit.com/v3/company/${env.QUICKBOOKS_REALM_ID}/purchase`,
-  {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    },
-    body: JSON.stringify(expense)
-  }
-);
-
-if (!response.ok) {
-  throw new Error(`QuickBooks API error: ${response.status}`);
-}
-
-console.log(`Expense ${msg.serviceId} synced to QuickBooks`);
-
-
-} catch (error) {
-console.error(‘QuickBooks expense sync error:’, error);
-throw error;
-}
-}
-
-async function refreshQuickBooksToken(env: Env): Promise<void> {
-const refreshToken = await env.INTEGRATIONS_KV.get(‘quickbooks_refresh_token’);
-if (!refreshToken) return;
-
-try {
-const response = await fetch(‘https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer’, {
-method: ‘POST’,
-headers: {
-‘Content-Type’: ‘application/x-www-form-urlencoded’,
-‘Authorization’: `Basic ${btoa(`${env.QUICKBOOKS_CLIENT_ID}:${env.QUICKBOOKS_CLIENT_SECRET}`)}`
-},
-body: new URLSearchParams({
-grant_type: ‘refresh_token’,
-refresh_token: refreshToken
-})
-});
-
-
-if (response.ok) {
-  const tokens = await response.json();
-  await env.INTEGRATIONS_KV.put('quickbooks_access_token', tokens.access_token, { expirationTtl: 3600 });
-  await env.INTEGRATIONS_KV.put('quickbooks_refresh_token', tokens.refresh_token);
-  console.log('QuickBooks token refreshed');
-}
-
-
-} catch (error) {
-console.error(‘Token refresh error:’, error);
-}
 }
