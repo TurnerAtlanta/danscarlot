@@ -1,6 +1,6 @@
 interface Env {
   // Durable Objects
-  CARLOT_AGENT: DurableObjectNamespace<import('./index').CarLotAgent>;
+  CARLOT_AGENT: DurableObjectNamespace<import("./index").CarLotAgent>;
 
   // KV Namespaces
   AUTH_KV: KVNamespace;
@@ -25,19 +25,17 @@ interface Env {
 }
 
 // Queue message types
-type QueueMessage =
-  | VehicleSyncMessage
-  | ExpenseSyncMessage;
+type QueueMessage = VehicleSyncMessage | ExpenseSyncMessage;
 
 interface VehicleSyncMessage {
-  type: 'vehicle_sync';
-  action: 'sold' | 'update';
+  type: "vehicle_sync";
+  action: "sold" | "update";
   vehicleId: string;
   timestamp: string;
 }
 
 interface ExpenseSyncMessage {
-  type: 'expense_sync';
+  type: "expense_sync";
   serviceId: string;
   vehicleId: string;
   amount: number;
@@ -55,7 +53,7 @@ interface Vehicle {
   purchase_date: string;
   sale_price: number | null;
   sale_date: string | null;
-  status: 'available' | 'sold' | 'pending' | 'service';
+  status: "available" | "sold" | "pending" | "service";
   location: string;
   mileage: number;
   color: string;
@@ -83,7 +81,7 @@ interface Task {
   description: string;
   assignee: string;
   due_date: string;
-  status: 'todo' | 'in_progress' | 'completed';
+  status: "todo" | "in_progress" | "completed";
   created_by: string;
   created_at: string;
   updated_at?: string;
@@ -101,7 +99,7 @@ interface Service {
 
 interface Comment {
   id: string;
-  entity_type: 'vehicle' | 'task' | 'service';
+  entity_type: "vehicle" | "task" | "service";
   entity_id: string;
   user_name: string;
   comment: string;
@@ -110,13 +108,19 @@ interface Comment {
 
 // WebSocket message types
 interface WebSocketMessage {
-  type: 'state' | 'task_update' | 'inventory_update' | 'comment_add' | 'service_add' | 'vehicle_sold';
+  type:
+    | "state"
+    | "task_update"
+    | "inventory_update"
+    | "comment_add"
+    | "service_add"
+    | "vehicle_sold";
   payload?: any;
   data?: {
     tasks?: Task[];
     vehicles?: Vehicle[];
   };
-  source?: 'dms' | 'user' | 'system';
+  source?: "dms" | "user" | "system";
 }
 
 // Integration API response types
@@ -132,13 +136,13 @@ interface IntegrationStatus {
   wayneReeves: {
     configured: boolean;
     lastSync: string | null;
-    status: 'connected' | 'not_synced' | 'error';
+    status: "connected" | "not_synced" | "error";
   };
   quickbooks: {
     configured: boolean;
     authenticated: boolean;
     lastSync: string | null;
-    status: 'connected' | 'not_authenticated' | 'error';
+    status: "connected" | "not_authenticated" | "error";
   };
   listings: {
     carGurus: { configured: boolean };
@@ -192,7 +196,7 @@ interface WayneReevesResponse {
 }
 
 interface WayneReevesWebhook {
-  event: 'vehicle.added' | 'vehicle.updated' | 'vehicle.sold';
+  event: "vehicle.added" | "vehicle.updated" | "vehicle.sold";
   vehicle: WayneReevesVehicle;
   soldDate?: string;
   salePrice?: number;
@@ -202,7 +206,7 @@ interface WayneReevesWebhook {
 interface QuickBooksInvoice {
   Line: Array<{
     Amount: number;
-    DetailType: 'SalesItemLineDetail';
+    DetailType: "SalesItemLineDetail";
     SalesItemLineDetail: {
       ItemRef: { value: string };
       Qty: number;
@@ -224,7 +228,7 @@ interface QuickBooksInvoiceResponse {
 interface QuickBooksOAuthParams {
   client_id: string;
   redirect_uri: string;
-  response_type: 'code';
+  response_type: "code";
   scope: string;
   state: string;
 }
