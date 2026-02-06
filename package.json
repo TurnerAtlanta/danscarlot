@@ -1,0 +1,38 @@
+{
+“name”: “danscarlot”,
+“version”: “1.0.0”,
+“description”: “CarLot Manager - Cloudflare Workers + Agents for car dealership management”,
+“type”: “module”,
+“private”: true,
+“scripts”: {
+“dev”: “wrangler dev”,
+“dev:frontend”: “vite”,
+“build”: “tsc && vite build”,
+“preview”: “vite preview”,
+“deploy”: “npm run build && wrangler deploy”,
+“tail”: “wrangler tail –format pretty”,
+“cf:login”: “wrangler login”,
+“cf:whoami”: “wrangler whoami”,
+“cf:kv:create”: “wrangler kv:namespace create INTEGRATIONS_KV && wrangler kv:namespace create AUTH_KV”,
+“cf:kv:preview”: “wrangler kv:namespace create INTEGRATIONS_KV –preview && wrangler kv:namespace create AUTH_KV –preview”,
+“cf:kv:list”: “wrangler kv:namespace list”,
+“cf:secret:list”: “wrangler secret list”,
+“cf:deployments”: “wrangler deployments list”,
+“cf:queues”: “wrangler queues list”
+},
+“dependencies”: {
+“agents”: “^0.2.32”,
+“hono”: “^4.0.0”
+},
+“devDependencies”: {
+“@cloudflare/workers-types”: “^4.20250101.0”,
+“@types/react”: “^18.3.27”,
+“@types/react-dom”: “^18.3.7”,
+“@vitejs/plugin-react”: “^4.7.0”,
+“react”: “^18.3.1”,
+“react-dom”: “^18.3.1”,
+“typescript”: “^5.9.3”,
+“vite”: “^6.4.1”,
+“wrangler”: “^4.62.0”
+}
+}
