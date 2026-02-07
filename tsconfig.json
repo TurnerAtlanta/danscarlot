@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "types": ["./worker-configuration"],
-    "typeRoots": ["./node_modules/@types"],
+    "types": ["worker-configuration.d.ts"],
+    "typeRoots": ["node_modules/@types"],
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
