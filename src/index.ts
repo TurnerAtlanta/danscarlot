@@ -107,8 +107,8 @@ export class CarLotAgent extends Agent<Env> {
   async onConnect(connection: WebSocket): Promise<void> {
     connection.accept();
 
-    const tasks = await this.sql<Task>`SELECT * FROM tasks ORDER BY created_at DESC LIMIT 100`;
-    const vehicles = await this.sql<Vehicle>`SELECT * FROM vehicles ORDER BY created_at DESC LIMIT 100`;
+    const tasks = await this.sql<Task>'SELECT * FROM tasks ORDER BY created_at DESC LIMIT 100';
+    const vehicles = await this.sql<Vehicle>'SELECT * FROM vehicles ORDER BY created_at DESC LIMIT 100';
 
     connection.send(
       JSON.stringify({
@@ -129,7 +129,7 @@ export class CarLotAgent extends Agent<Env> {
     try {
       data = JSON.parse(message) as WebSocketMessage;
     } catch (err) {
-      console.error('Invalid JSON message received:', err);
+      console.error("Invalid JSON message received:", err);
       return;
     }
 
