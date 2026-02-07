@@ -44,7 +44,7 @@ interface Vehicle {
   make: string;
   model: string;
   year: number;
-  purchase_price: number;
+  purchase_price: number;"
   purchase_date: string;
   sale_price: number | null;
   sale_date: string | null;
