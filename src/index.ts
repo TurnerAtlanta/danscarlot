@@ -1,5 +1,7 @@
-// src/index.ts - Main Worker Entry Point
-import { Hono } from 'hono';
+// src/index.ts - Main Worker Entry Point + CarLotAgent Durable Object
+// ============================================================================
+
+import Hono from 'hono';
 import { cors } from 'hono/cors';
 import { Agent, routeAgentRequest } from 'agents';
 
@@ -8,35 +10,24 @@ import { Agent, routeAgentRequest } from 'agents';
 // ============================================================================
 
 interface Env {
-  CARLOT_AGENT: DurableObjectNamespace<CarLotAgent>;
-  INTEGRATIONS_KV: KVNamespace;
-  AUTH_KV: KVNamespace;
-  SYNC_QUEUE: Queue<QueueMessage>;
+  CARLOTAGENT: DurableObjectNamespace<CarLotAgent>;
+  INTEGRATIONSKV?: KVNamespace;
+  AUTHKV?: KVNamespace;
+  SYNCQUEUE: Queue<QueueMessage>;
   ASSETS: Fetcher;
-  WAYNE_REEVES_API_KEY?: string;
-  WAYNE_REEVES_API_URL?: string;
-  QUICKBOOKS_CLIENT_ID?: string;
-  QUICKBOOKS_CLIENT_SECRET?: string;
-  QUICKBOOKS_REALM_ID?: string;
-  CARGURUS_API_KEY?: string;
-  TRUECAR_DEALER_ID?: string;
-  KBB_DEALER_ID?: string;
+  WAYNEREEVESAPIKEY?: string;
+  WAYNEREEVESAPIURL?: string;
+  QUICKBOOKSCLIENTID?: string;
+  QUICKBOOKSCLIENTSECRET?: string;
+  QUICKBOOKSREALMID?: string;
+  CARGURUSAPIKEY?: string;
+  TRUECARDEALERID?: string;
+  KBBDEALERID?: string;
 }
 
-type QueueMessage =
-  | {
-      type: 'vehicle_sync';
-      action: 'sold' | 'update';
-      vehicleId: string;
-      timestamp: string;
-    }
-  | {
-      type: 'expense_sync';
-      serviceId: string;
-      vehicleId: string;
-      amount: number;
-      timestamp: string;
-    };
+type QueueMessage = 
+  | { type: 'vehiclesync'; action: 'sold' | 'update'; vehicleId: string; timestamp: string }
+  | { type: 'expensesync'; serviceId: string; vehicleId: string; amount: number; timestamp: string };
 
 interface Vehicle {
   id: string;
@@ -44,30 +35,30 @@ interface Vehicle {
   make: string;
   model: string;
   year: number;
-  purchase_price: number;"
-  purchase_date: string;
-  sale_price: number | null;
-  sale_date: string | null;
+  purchaseprice: number;
+  purchasedate: string;
+  saleprice: number | null;
+  saledate: string | null;
   status: string;
   location: string;
   mileage: number;
   color: string;
-  body_style: string;
+  bodystyle: string;
   transmission: string;
-  fuel_type: string;
+  fueltype: string;
   description: string;
   features: string;
   images: string;
-  created_at: string;
-  updated_at?: string;
-  publish_to_website: number;
-  publish_to_third_party: number;
-  external_dms_id?: string;
-  external_dms_source?: string;
-  quickbooks_invoice_id?: string;
-  cargurus_listing_id?: string;
-  truecar_listing_id?: string;
-  kbb_listing_id?: string;
+  createdat: string;
+  updatedat?: string;
+  publishtowebsite: number;
+  publishtothirdparty: number;
+  externaldmsid?: string;
+  externaldmssource?: string;
+  quickbooksinvoiceid?: string;
+  carguruslistingid?: string;
+  truecarlistingid?: string;
+  kbblistingid?: string;
 }
 
 interface Task {
@@ -75,30 +66,30 @@ interface Task {
   title: string;
   description: string;
   assignee: string;
-  due_date: string;
+  duedate: string;
   status: string;
-  created_by: string;
-  created_at: string;
-  updated_at?: string;
+  createdby: string;
+  createdat: string;
+  updatedat?: string;
 }
 
 interface Service {
   id: string;
-  vehicle_id: string;
-  service_type: string;
+  vehicleid: string;
+  servicetype: string;
   description: string;
   cost: number;
-  service_date: string;
-  created_at: string;
+  servicedate: string;
+  createdat: string;
 }
 
 interface Comment {
   id: string;
-  entity_type: string;
-  entity_id: string;
-  user_name: string;
+  entitytype: string;
+  entityid: string;
+  username: string;
   comment: string;
-  created_at: string;
+  createdat: string;
 }
 
 interface WebSocketMessage {
@@ -116,23 +107,15 @@ export class CarLotAgent extends Agent<Env> {
   async onConnect(connection: WebSocket): Promise<void> {
     connection.accept();
 
-    const tasks = await this.sql<Task>`
-      SELECT * FROM tasks ORDER BY created_at DESC LIMIT 100
-    `;
-    const vehicles = await this.sql<Vehicle>`
-      SELECT * FROM vehicles ORDER BY created_at DESC LIMIT 100
-    `;
+    const tasks = await this.sql<Task>`SELECT * FROM tasks ORDER BY created_at DESC LIMIT 100`;
+    const vehicles = await this.sql<Vehicle>`SELECT * FROM vehicles ORDER BY created_at DESC LIMIT 100`;
 
     connection.send(
       JSON.stringify({
         type: 'state',
         tasks: Array.from(tasks),
         vehicles: Array.from(vehicles),
-      }),
-    );
-
-        },
-      }),
+      })
     );
   }
 
@@ -151,15 +134,15 @@ export class CarLotAgent extends Agent<Env> {
     }
 
     switch (data.type) {
-      case 'task_update':
+      case 'taskupdate':
         await this.handleTaskUpdate(data.payload);
         this.broadcast(JSON.stringify(data));
         break;
-      case 'inventory_update':
+      case 'inventoryupdate':
         await this.handleInventoryUpdate(data.payload);
         this.broadcast(JSON.stringify(data));
         break;
-      case 'comment_add':
+      case 'commentadd':
         await this.handleCommentAdd(data.payload);
         this.broadcast(JSON.stringify(data));
         break;
@@ -170,65 +153,49 @@ export class CarLotAgent extends Agent<Env> {
 
   private async handleTaskUpdate(payload: any): Promise<void> {
     await this.sql`
-      INSERT INTO tasks (id, title, description, assignee, due_date, status, created_by, created_at)
-      VALUES (
-        ${payload.id}, ${payload.title}, ${payload.description}, ${payload.assignee},
-        ${payload.dueDate}, ${payload.status}, ${payload.createdBy}, ${new Date().toISOString()}
-      )
+      INSERT INTO tasks (id, title, description, assignee, duedate, status, createdby, createdat)
+      VALUES (${payload.id}, ${payload.title}, ${payload.description}, ${payload.assignee}, ${payload.dueDate}, ${payload.status}, ${payload.createdBy}, ${new Date().toISOString()})
       ON CONFLICT(id) DO UPDATE SET
         title = ${payload.title},
         description = ${payload.description},
         assignee = ${payload.assignee},
-        due_date = ${payload.dueDate},
+        duedate = ${payload.dueDate},
         status = ${payload.status},
-        updated_at = ${new Date().toISOString()}
+        updatedat = ${new Date().toISOString()}
     `;
   }
 
   private async handleInventoryUpdate(payload: any): Promise<void> {
     await this.sql`
       INSERT INTO vehicles (
-        id, vin, make, model, year, purchase_price, purchase_date, sale_price, sale_date,
-        status, location, mileage, color, body_style, transmission, fuel_type,
-        description, features, images, created_at, publish_to_website, publish_to_third_party
-      )
-      VALUES (
+        id, vin, make, model, year, purchaseprice, purchasedate, saleprice, saledate,
+        status, location, mileage, color, bodystyle, transmission, fueltype,
+        description, features, images, createdat, publishtowebsite, publishtothirdparty
+      ) VALUES (
         ${payload.id}, ${payload.vin}, ${payload.make}, ${payload.model}, ${payload.year},
-        ${payload.purchasePrice}, ${payload.purchaseDate}, ${payload.salePrice || null},
-        ${payload.saleDate || null}, ${payload.status}, ${payload.location},
-        ${payload.mileage || 0}, ${payload.color || ''}, ${payload.bodyStyle || ''},
-        ${payload.transmission || ''}, ${payload.fuelType || ''}, ${payload.description || ''},
-        ${payload.features || ''}, ${payload.images || ''}, ${new Date().toISOString()},
-        ${payload.publishToWebsite !== false ? 1 : 0},
-        ${payload.publishToThirdParty !== false ? 1 : 0}
+        ${payload.purchasePrice}, ${payload.purchaseDate}, ${payload.salePrice ?? null}, ${payload.saleDate ?? null},
+        ${payload.status}, ${payload.location}, ${payload.mileage ?? 0}, ${payload.color ?? ''}, ${payload.bodyStyle ?? ''},
+        ${payload.transmission ?? ''}, ${payload.fuelType ?? ''}, ${payload.description ?? ''}, ${payload.features ?? ''},
+        ${payload.images ?? ''}, ${new Date().toISOString()},
+        ${payload.publishToWebsite !== false ? 1 : 0}, ${payload.publishToThirdParty !== false ? 1 : 0}
       )
       ON CONFLICT(id) DO UPDATE SET
-        make = ${payload.make},
-        model = ${payload.model},
-        year = ${payload.year},
-        purchase_price = ${payload.purchasePrice},
-        sale_price = ${payload.salePrice || null},
-        sale_date = ${payload.saleDate || null},
-        status = ${payload.status},
-        location = ${payload.location},
-        mileage = ${payload.mileage || 0},
-        color = ${payload.color || ''},
-        body_style = ${payload.bodyStyle || ''},
-        transmission = ${payload.transmission || ''},
-        fuel_type = ${payload.fuelType || ''},
-        description = ${payload.description || ''},
-        features = ${payload.features || ''},
-        images = ${payload.images || ''},
-        publish_to_website = ${payload.publishToWebsite !== false ? 1 : 0},
-        publish_to_third_party = ${payload.publishToThirdParty !== false ? 1 : 0},
-        updated_at = ${new Date().toISOString()}
+        make = ${payload.make}, model = ${payload.model}, year = ${payload.year},
+        purchaseprice = ${payload.purchasePrice}, saleprice = ${payload.salePrice ?? null},
+        saledate = ${payload.saleDate ?? null}, status = ${payload.status}, location = ${payload.location},
+        mileage = ${payload.mileage ?? 0}, color = ${payload.color ?? ''}, bodystyle = ${payload.bodyStyle ?? ''},
+        transmission = ${payload.transmission ?? ''}, fueltype = ${payload.fuelType ?? ''},
+        description = ${payload.description ?? ''}, features = ${payload.features ?? ''}, images = ${payload.images ?? ''},
+        publishtowebsite = ${payload.publishToWebsite !== false ? 1 : 0},
+        publishtothirdparty = ${payload.publishToThirdParty !== false ? 1 : 0},
+        updatedat = ${new Date().toISOString()}
     `;
 
-    if (this.env.SYNC_QUEUE) {
+    if (payload.saleDate && this.env.SYNCQUEUE) {
       try {
-        await this.env.SYNC_QUEUE.send({
-          type: 'vehicle_sync',
-          action: payload.saleDate ? 'sold' : 'update',
+        await this.env.SYNCQUEUE.send({
+          type: 'vehiclesync',
+          action: 'sold',
           vehicleId: payload.id,
           timestamp: new Date().toISOString(),
         });
@@ -240,11 +207,8 @@ export class CarLotAgent extends Agent<Env> {
 
   private async handleCommentAdd(payload: any): Promise<void> {
     await this.sql`
-      INSERT INTO comments (id, entity_type, entity_id, user_name, comment, created_at)
-      VALUES (
-        ${payload.id}, ${payload.entityType}, ${payload.entityId},
-        ${payload.userName}, ${payload.comment}, ${new Date().toISOString()}
-      )
+      INSERT INTO comments (id, entitytype, entityid, username, comment, createdat)
+      VALUES (${payload.id}, ${payload.entityType}, ${payload.entityId}, ${payload.userName}, ${payload.comment}, ${new Date().toISOString()})
     `;
   }
 
@@ -277,9 +241,7 @@ export class CarLotAgent extends Agent<Env> {
     // Single vehicle API (for queue consumer)
     if (url.pathname.startsWith('/api/vehicles/') && request.method === 'GET') {
       const vehicleId = url.pathname.split('/').pop();
-      const vehicle = await this.sql<Vehicle>`
-        SELECT * FROM vehicles WHERE id = ${vehicleId} LIMIT 1
-      `;
+      const vehicle = await this.sql<Vehicle>`SELECT * FROM vehicles WHERE id = ${vehicleId} LIMIT 1`;
       const result = Array.from(vehicle);
       if (result.length === 0) {
         return Response.json({ error: 'Vehicle not found' }, { status: 404 });
@@ -289,11 +251,11 @@ export class CarLotAgent extends Agent<Env> {
 
     // Public inventory feed (customer-facing)
     if (url.pathname === '/api/public/inventory' && request.method === 'GET') {
-      const vehicles = await this.sql<Partial<Vehicle>>`
-        SELECT id, vin, make, model, year, sale_price as price, mileage, color,
-               body_style, transmission, fuel_type, description, features, images, location
+      const vehicles = await this.sql<Vehicle>`
+        SELECT id, vin, make, model, year, saleprice as price, mileage, color, bodystyle,
+               transmission, fueltype, description, features, images, location
         FROM vehicles
-        WHERE status = 'available' AND publish_to_website = 1
+        WHERE status = 'available' AND publishtowebsite = 1
         ORDER BY created_at DESC
       `;
       return Response.json(Array.from(vehicles), {
@@ -307,11 +269,11 @@ export class CarLotAgent extends Agent<Env> {
     // Public vehicle detail (customer-facing)
     if (url.pathname.startsWith('/api/public/vehicle/') && request.method === 'GET') {
       const vehicleId = url.pathname.split('/').pop();
-      const vehicle = await this.sql<Partial<Vehicle>>`
-        SELECT id, vin, make, model, year, sale_price as price, mileage, color,
-               body_style, transmission, fuel_type, description, features, images, location
+      const vehicle = await this.sql<Vehicle>`
+        SELECT id, vin, make, model, year, saleprice as price, mileage, color, bodystyle,
+               transmission, fueltype, description, features, images, location
         FROM vehicles
-        WHERE id = ${vehicleId} AND status = 'available' AND publish_to_website = 1
+        WHERE id = ${vehicleId} AND status = 'available' AND publishtowebsite = 1
         LIMIT 1
       `;
       const result = Array.from(vehicle);
@@ -329,27 +291,22 @@ export class CarLotAgent extends Agent<Env> {
     // Services API
     if (url.pathname === '/api/services' && request.method === 'GET') {
       const vehicleId = url.searchParams.get('vehicleId');
-      const services = await this.sql<Service>`
-        SELECT * FROM services
-        WHERE vehicle_id = ${vehicleId}
-        ORDER BY service_date DESC
-      `;
+      const services = await this.sql<Service>`SELECT * FROM services WHERE vehicleid = ${vehicleId} ORDER BY servicedate DESC`;
       return Response.json(Array.from(services));
     }
 
     if (url.pathname === '/api/services' && request.method === 'POST') {
-      const payload = (await request.json()) as any;
+      const payload = await request.json() as any;
       await this.sql`
-        INSERT INTO services (id, vehicle_id, service_type, description, cost, service_date, created_at)
-        VALUES (${payload.id}, ${payload.vehicleId}, ${payload.serviceType},
-                ${payload.description}, ${payload.cost}, ${payload.serviceDate}, ${new Date().toISOString()})
+        INSERT INTO services (id, vehicleid, servicetype, description, cost, servicedate, createdat)
+        VALUES (${payload.id}, ${payload.vehicleId}, ${payload.serviceType}, ${payload.description}, ${payload.cost}, ${payload.serviceDate}, ${new Date().toISOString()})
       `;
-      this.broadcast(JSON.stringify({ type: 'service_add', payload }));
+      this.broadcast(JSON.stringify({ type: 'serviceadd', payload }));
 
-      if (this.env.SYNC_QUEUE) {
+      if (this.env.SYNCQUEUE) {
         try {
-          await this.env.SYNC_QUEUE.send({
-            type: 'expense_sync',
+          await this.env.SYNCQUEUE.send({
+            type: 'expensesync',
             serviceId: payload.id,
             vehicleId: payload.vehicleId,
             amount: payload.cost,
@@ -359,7 +316,6 @@ export class CarLotAgent extends Agent<Env> {
           console.error('Error queuing expense sync:', error);
         }
       }
-
       return Response.json({ success: true });
     }
 
@@ -375,42 +331,10 @@ export class CarLotAgent extends Agent<Env> {
       const entityId = url.searchParams.get('entityId');
       const comments = await this.sql<Comment>`
         SELECT * FROM comments
-        WHERE entity_type = ${entityType} AND entity_id = ${entityId}
+        WHERE entitytype = ${entityType} AND entityid = ${entityId}
         ORDER BY created_at ASC
       `;
       return Response.json(Array.from(comments));
-    }
-
-    // Integration: Sync with Wayne Reeves DMS
-    if (url.pathname === '/api/integrations/wayne-reeves/sync' && request.method === 'POST') {
-      const result = await this.syncWithWayneReeves();
-      return Response.json(result);
-    }
-
-    // Integration: Sync with QuickBooks
-    if (url.pathname === '/api/integrations/quickbooks/sync' && request.method === 'POST') {
-      const result = await this.syncWithQuickBooks();
-      return Response.json(result);
-    }
-
-    // Integration: Publish to third-party sites
-    if (url.pathname === '/api/integrations/listings/publish' && request.method === 'POST') {
-      const { vehicleId } = (await request.json()) as any;
-      const result = await this.publishToListingSites(vehicleId);
-      return Response.json(result);
-    }
-
-    // Integration: Get sync status
-    if (url.pathname === '/api/integrations/status' && request.method === 'GET') {
-      const status = await this.getIntegrationStatus();
-      return Response.json(status);
-    }
-
-    // Webhook: Receive updates from Wayne Reeves
-    if (url.pathname === '/api/webhooks/wayne-reeves' && request.method === 'POST') {
-      const payload = (await request.json()) as any;
-      await this.handleWayneReevesWebhook(payload);
-      return Response.json({ success: true });
     }
 
     return new Response('Not found', { status: 404 });
@@ -425,19 +349,18 @@ export class CarLotAgent extends Agent<Env> {
     let soldCount = 0;
     let inventoryCount = 0;
 
-    for (const vehicle of vehicles) {
-      const purchasePrice = Number(vehicle.purchase_price) || 0;
+    for (const vehicle of Array.from(vehicles)) {
+      const purchasePrice = Number(vehicle.purchaseprice) || 0;
       totalCost += purchasePrice;
-
-      if (vehicle.status === 'sold' && vehicle.sale_price) {
-        totalRevenue += Number(vehicle.sale_price);
+      if (vehicle.status === 'sold' && vehicle.saleprice) {
+        totalRevenue += Number(vehicle.saleprice);
         soldCount++;
-      } else if (vehicle.status !== 'sold') {
+      } else {
         inventoryCount++;
       }
     }
 
-    for (const service of services) {
+    for (const service of Array.from(services)) {
       totalCost += Number(service.cost) || 0;
     }
 
@@ -453,231 +376,6 @@ export class CarLotAgent extends Agent<Env> {
       inventoryCount,
       avgProfitPerVehicle: soldCount > 0 ? (profit / soldCount).toFixed(2) : '0',
     };
-  }
-
-  private async syncWithWayneReeves(): Promise<any> {
-    if (!this.env.WAYNE_REEVES_API_KEY || !this.env.WAYNE_REEVES_API_URL) {
-      return { success: false, error: 'Wayne Reeves credentials not configured' };
-    }
-
-    try {
-      const response = await fetch(`${this.env.WAYNE_REEVES_API_URL}/inventory`, {
-        headers: {
-          Authorization: `Bearer ${this.env.WAYNE_REEVES_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Wayne Reeves API error: ${response.status}`);
-      }
-
-      const data = (await response.json()) as any;
-      let synced = 0;
-      let errors = 0;
-
-      for (const wrVehicle of data.vehicles || []) {
-        try {
-          await this.sql`
-            INSERT INTO vehicles (
-              id, vin, make, model, year, purchase_price, purchase_date,
-              mileage, color, body_style, transmission, fuel_type, status, location,
-              external_dms_id, external_dms_source, created_at,
-              publish_to_website, publish_to_third_party
-            )
-            VALUES (
-              ${crypto.randomUUID()}, ${wrVehicle.vin}, ${wrVehicle.make}, ${wrVehicle.model},
-              ${wrVehicle.year}, ${wrVehicle.cost || 0}, ${wrVehicle.date_acquired},
-              ${wrVehicle.mileage}, ${wrVehicle.color}, ${wrVehicle.body_style},
-              ${wrVehicle.transmission}, ${wrVehicle.fuel_type}, ${wrVehicle.status},
-              ${wrVehicle.location}, ${wrVehicle.stock_number}, 'wayne_reeves',
-              ${new Date().toISOString()}, 0, 0
-            )
-            ON CONFLICT(vin) DO UPDATE SET
-              mileage = ${wrVehicle.mileage},
-              status = ${wrVehicle.status},
-              location = ${wrVehicle.location},
-              updated_at = ${new Date().toISOString()}
-          `;
-          synced++;
-        } catch (e) {
-          console.error('Error syncing vehicle:', wrVehicle.vin, e);
-          errors++;
-        }
-      }
-
-      await this.env.INTEGRATIONS_KV?.put('wayne_reeves_last_sync', new Date().toISOString());
-
-      return { success: true, synced, errors, timestamp: new Date().toISOString() };
-    } catch (error: any) {
-      console.error('Wayne Reeves sync error:', error);
-      return { success: false, error: error.message };
-    }
-  }
-
-  private async syncWithQuickBooks(): Promise<any> {
-    if (!this.env.QUICKBOOKS_CLIENT_ID || !this.env.QUICKBOOKS_REALM_ID) {
-      return { success: false, error: 'QuickBooks credentials not configured' };
-    }
-
-    try {
-      const accessToken = await this.env.INTEGRATIONS_KV?.get('quickbooks_access_token');
-      if (!accessToken) {
-        return { success: false, error: 'QuickBooks not authenticated' };
-      }
-
-      const recentSales = await this.sql<Vehicle>`
-        SELECT * FROM vehicles
-        WHERE status = 'sold'
-        AND sale_date > datetime('now', '-7 days')
-        AND quickbooks_invoice_id IS NULL
-      `;
-
-      let synced = 0;
-      let errors = 0;
-
-      for (const vehicle of recentSales) {
-        try {
-          const invoice = {
-            Line: [
-              {
-                Amount: vehicle.sale_price,
-                DetailType: 'SalesItemLineDetail',
-                SalesItemLineDetail: {
-                  ItemRef: { value: '1' },
-                  Qty: 1,
-                  UnitPrice: vehicle.sale_price,
-                },
-                Description: `${vehicle.year} ${vehicle.make} ${vehicle.model} - VIN: ${vehicle.vin}`,
-              },
-            ],
-            CustomerRef: { value: '1' },
-          };
-
-          const response = await fetch(
-            `https://quickbooks.api.intuit.com/v3/company/${this.env.QUICKBOOKS_REALM_ID}/invoice`,
-            {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
-              },
-              body: JSON.stringify(invoice),
-            },
-          );
-
-          if (response.ok) {
-            const result = (await response.json()) as any;
-            await this.sql`
-              UPDATE vehicles
-              SET quickbooks_invoice_id = ${result.Invoice.Id}
-              WHERE id = ${vehicle.id}
-            `;
-            synced++;
-          } else {
-            errors++;
-          }
-        } catch (e) {
-          console.error('Error syncing to QuickBooks:', vehicle.id, e);
-          errors++;
-        }
-      }
-
-      await this.env.INTEGRATIONS_KV?.put('quickbooks_last_sync', new Date().toISOString());
-
-      return { success: true, synced, errors, timestamp: new Date().toISOString() };
-    } catch (error: any) {
-      console.error('QuickBooks sync error:', error);
-      return { success: false, error: error.message };
-    }
-  }
-
-  private async publishToListingSites(vehicleId: string): Promise<any> {
-    const vehicle = await this.sql<Vehicle>`
-      SELECT * FROM vehicles WHERE id = ${vehicleId} LIMIT 1
-    `;
-    const vehicleData = Array.from(vehicle)[0];
-
-    if (!vehicleData) {
-      return { success: false, error: 'Vehicle not found' };
-    }
-
-    const results = {
-      carGurus: { success: false },
-      trueCar: { success: false },
-      kbb: { success: false },
-    };
-
-    return { success: true, results, timestamp: new Date().toISOString() };
-  }
-
-  private async getIntegrationStatus(): Promise<any> {
-    const wayneReevesSync = await this.env.INTEGRATIONS_KV?.get('wayne_reeves_last_sync');
-    const quickbooksSync = await this.env.INTEGRATIONS_KV?.get('quickbooks_last_sync');
-    const quickbooksToken = await this.env.INTEGRATIONS_KV?.get('quickbooks_access_token');
-
-    const publishedVehicles = await this.sql<{ count: number }>`
-      SELECT COUNT(*) as count FROM vehicles
-      WHERE cargurus_listing_id IS NOT NULL
-         OR truecar_listing_id IS NOT NULL
-         OR kbb_listing_id IS NOT NULL
-    `;
-
-    return {
-      wayneReeves: {
-        configured: !!this.env.WAYNE_REEVES_API_KEY,
-        lastSync: wayneReevesSync,
-        status: wayneReevesSync ? 'connected' : 'not_synced',
-      },
-      quickbooks: {
-        configured: !!this.env.QUICKBOOKS_CLIENT_ID,
-        authenticated: !!quickbooksToken,
-        lastSync: quickbooksSync,
-        status: quickbooksToken ? 'connected' : 'not_authenticated',
-      },
-      listings: {
-        carGurus: { configured: !!this.env.CARGURUS_API_KEY },
-        trueCar: { configured: !!this.env.TRUECAR_DEALER_ID },
-        kbb: { configured: !!this.env.KBB_DEALER_ID },
-        totalPublished: Array.from(publishedVehicles)[0]?.count || 0,
-      },
-    };
-  }
-
-  private async handleWayneReevesWebhook(payload: any): Promise<void> {
-    switch (payload.event) {
-      case 'vehicle.added':
-      case 'vehicle.updated':
-        await this.sql`
-          INSERT INTO vehicles (
-            id, vin, make, model, year, external_dms_id, external_dms_source,
-            created_at, publish_to_website, publish_to_third_party
-          )
-          VALUES (
-            ${crypto.randomUUID()}, ${payload.vehicle.vin}, ${payload.vehicle.make},
-            ${payload.vehicle.model}, ${payload.vehicle.year}, ${payload.vehicle.stock_number},
-            'wayne_reeves', ${new Date().toISOString()}, 0, 0
-          )
-          ON CONFLICT(vin) DO UPDATE SET
-            make = ${payload.vehicle.make},
-            model = ${payload.vehicle.model},
-            updated_at = ${new Date().toISOString()}
-        `;
-        this.broadcast(JSON.stringify({ type: 'inventory_update', source: 'dms' }));
-        break;
-
-      case 'vehicle.sold':
-        await this.sql`
-          UPDATE vehicles
-          SET status = 'sold',
-              sale_date = ${payload.soldDate},
-              sale_price = ${payload.salePrice}
-          WHERE vin = ${payload.vehicle.vin}
-        `;
-        this.broadcast(JSON.stringify({ type: 'vehicle_sold', source: 'dms' }));
-        break;
-    }
   }
 }
 
@@ -709,20 +407,20 @@ app.post('/api/integrations/quickbooks/disconnect', async (c) => {
 app.all('/agents/*', async (c) => {
   const agentResponse = await routeAgentRequest(c.req.raw, c.env);
   if (agentResponse) return agentResponse;
-  return c.json({ error: 'Agent not found' }, { status: 404 });
+  return c.json({ error: 'Agent not found' }, 404);
 });
 
 // Fallback API routes to agent
 app.get('/api/*', async (c) => {
   const agentRequest = await routeAgentRequest(c.req.raw, c.env);
   if (agentRequest) return agentRequest;
-  return c.json({ error: 'Not found' }, { status: 404 });
+  return c.json({ error: 'Not found' }, 404);
 });
 
 app.post('/api/*', async (c) => {
   const agentRequest = await routeAgentRequest(c.req.raw, c.env);
   if (agentRequest) return agentRequest;
-  return c.json({ error: 'Not found' }, { status: 404 });
+  return c.json({ error: 'Not found' }, 404);
 });
 
 // Serve static assets (React app, inventory page, etc.)
@@ -731,9 +429,7 @@ app.get('/*', async (c) => {
 });
 
 export default app;
-
-// Export Durable Object class
 export { CarLotAgent };
 
 // Export queue consumer
-export { default as queue } from './queue-consumer';
+export default { queue: await import('./queue-consumer') };
