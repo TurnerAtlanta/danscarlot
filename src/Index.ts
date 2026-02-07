@@ -116,9 +116,12 @@ export class CarLotAgent extends Agent<Env> {
   async onConnect(connection: WebSocket): Promise<void> {
     connection.accept();
 
-    // Send current state to newly connected client
-    const tasks = await this.sql<Task>`SELECT * FROM tasks ORDER BY created_at DESC LIMIT 100`;
-    const vehicles = await this.sql<Vehicle>`SELECT * FROM vehicles ORDER BY created_at DESC LIMIT 100`;
+    const tasks = await this.sql<Task>`
+      SELECT * FROM tasks ORDER BY created_at DESC LIMIT 100
+    `;
+    const vehicles = await this.sql<Vehicle>`
+      SELECT * FROM vehicles ORDER BY created_at DESC LIMIT 100
+    `;
 
     connection.send(
       JSON.stringify({
@@ -127,7 +130,7 @@ export class CarLotAgent extends Agent<Env> {
           tasks: Array.from(tasks),
           vehicles: Array.from(vehicles),
         },
-      })
+      }),
     );
   }
 
@@ -137,21 +140,29 @@ export class CarLotAgent extends Agent<Env> {
       return;
     }
 
-    const  WebSocketMessage = JSON.parse(message);
+    let  WebSocketMessage;
+    try {
+      data = JSON.parse(message) as WebSocketMessage;
+    } catch (err) {
+      console.error('Invalid JSON message received:', err);
+      return;
+    }
 
     switch (data.type) {
       case 'task_update':
         await this.handleTaskUpdate(data.payload);
-        this.broadcast(message);
+        this.broadcast(JSON.stringify(data));
         break;
       case 'inventory_update':
         await this.handleInventoryUpdate(data.payload);
-        this.broadcast(message);
+        this.broadcast(JSON.stringify(data));
         break;
       case 'comment_add':
         await this.handleCommentAdd(data.payload);
-        this.broadcast(message);
+        this.broadcast(JSON.stringify(data));
         break;
+      default:
+        console.warn('Unknown message type:', data.type);
     }
   }
 
@@ -211,7 +222,6 @@ export class CarLotAgent extends Agent<Env> {
         updated_at = ${new Date().toISOString()}
     `;
 
-    // Queue sync jobs for integrations
     if (this.env.SYNC_QUEUE) {
       try {
         await this.env.SYNC_QUEUE.send({
@@ -265,7 +275,9 @@ export class CarLotAgent extends Agent<Env> {
     // Single vehicle API (for queue consumer)
     if (url.pathname.startsWith('/api/vehicles/') && request.method === 'GET') {
       const vehicleId = url.pathname.split('/').pop();
-      const vehicle = await this.sql<Vehicle>`SELECT * FROM vehicles WHERE id = ${vehicleId} LIMIT 1`;
+      const vehicle = await this.sql<Vehicle>`
+        SELECT * FROM vehicles WHERE id = ${vehicleId} LIMIT 1
+      `;
       const result = Array.from(vehicle);
       if (result.length === 0) {
         return Response.json({ error: 'Vehicle not found' }, { status: 404 });
@@ -332,7 +344,6 @@ export class CarLotAgent extends Agent<Env> {
       `;
       this.broadcast(JSON.stringify({ type: 'service_add', payload }));
 
-      // Sync service cost to QuickBooks
       if (this.env.SYNC_QUEUE) {
         try {
           await this.env.SYNC_QUEUE.send({
@@ -551,7 +562,7 @@ export class CarLotAgent extends Agent<Env> {
                 Accept: 'application/json',
               },
               body: JSON.stringify(invoice),
-            }
+            },
           );
 
           if (response.ok) {
@@ -581,7 +592,9 @@ export class CarLotAgent extends Agent<Env> {
   }
 
   private async publishToListingSites(vehicleId: string): Promise<any> {
-    const vehicle = await this.sql<Vehicle>`SELECT * FROM vehicles WHERE id = ${vehicleId} LIMIT 1`;
+    const vehicle = await this.sql<Vehicle>`
+      SELECT * FROM vehicles WHERE id = ${vehicleId} LIMIT 1
+    `;
     const vehicleData = Array.from(vehicle)[0];
 
     if (!vehicleData) {
@@ -593,9 +606,6 @@ export class CarLotAgent extends Agent<Env> {
       trueCar: { success: false },
       kbb: { success: false },
     };
-
-    // Implementation would go here for each listing site
-    // This is a placeholder showing the structure
 
     return { success: true, results, timestamp: new Date().toISOString() };
   }
