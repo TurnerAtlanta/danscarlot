@@ -126,9 +126,11 @@ export class CarLotAgent extends Agent<Env> {
     connection.send(
       JSON.stringify({
         type: 'state',
-         {
-          tasks: Array.from(tasks),
-          vehicles: Array.from(vehicles),
+        tasks: Array.from(tasks),
+        vehicles: Array.from(vehicles),
+      }),
+    );
+
         },
       }),
     );
