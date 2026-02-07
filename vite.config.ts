@@ -2,12 +2,15 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import { fileURLToPath } from 'node:url'
+import cloudflare from '@cloudflare/vite-cloudflare-workers'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(),
+            cloudflare()
+           ],
   build: {
     outDir: 'public/dist',
     emptyOutDir: true,
