@@ -18,6 +18,12 @@ export async function getCars(): Promise<Car[]> {
   return res.json()
 }
 
+export async function getCar(id: string): Promise<Car> {
+  const res = await fetch(`${API_BASE}/cars/${id}`)
+  if (!res.ok) throw new Error('Failed to fetch car')
+  return res.json()
+}
+
 export async function addCar(car: Omit<Car, 'id'>): Promise<Car> {
   const res = await fetch(`${API_BASE}/cars`, {
     method: 'POST',

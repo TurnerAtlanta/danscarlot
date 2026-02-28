@@ -7,9 +7,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "deploy": "npm run build && wrangler pages publish dist --project-name=danscarlot",
-    "api:dev": "cd api && wrangler dev",
-    "api:deploy": "cd api && wrangler deploy"
+    "deploy": "npm run build && wrangler pages deploy dist",
+    "api:dev": "wrangler dev src/api/index.ts",
+    "api:deploy": "wrangler deploy src/api/index.ts"
   },
   "dependencies": {
     "@rollup/plugin-terser": "^0.1.0",
@@ -22,6 +22,7 @@
     "workbox-build": "^7.0.0"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240725.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
@@ -31,6 +32,6 @@
     "typescript": "^5.5.3",
     "vite": "^6.4.1",
     "vite-plugin-pwa": "^0.19.8",
-    "wrangler": "^4.69.0"
+    "wrangler": "^3.67.0"
   }
 }
