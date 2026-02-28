@@ -1,19 +1,17 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { getCars, updateCar, type Car } from '../../api'
+import { getCar, updateCar, type Car } from '../../api'
 
 export default function EditCar() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const { data: cars } = useQuery<Car[]>({
-    queryKey: ['cars'],
-    queryFn: getCars
-  })
-
-  const car = cars?.find((c) => c.id === id)
+  const { data: car, isLoading, isError } = useQuery<Car>({ 
+    queryKey: ['cars', id], 
+    queryFn: () => getCar(id!) 
+  });
 
   const mutation = useMutation({
     mutationFn: (updated: Car) => updateCar(updated),
@@ -26,8 +24,8 @@ export default function EditCar() {
   })
 
   if (!id) return <p>Missing car ID.</p>
-  if (!cars) return <p>Loading car…</p>
-  if (!car) return <p>Car not found.</p>
+  if (isLoading) return <p>Loading car…</p>
+  if (isError || !car) return <p>Car not found.</p>
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
