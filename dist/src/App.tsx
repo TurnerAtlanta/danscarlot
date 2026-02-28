@@ -3,9 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import Layout from './components/Layout'
-import CarList from './components/CarManager/CarList'
-import AddCar from './components/CarManager/AddCar'
-import EditCar from './components/CarManager/EditCar'
+import { CarList, AddCar, EditCar } from './components/CarManager'
 import { ThemeProvider } from './ThemeContext'
 
 const queryClient = new QueryClient()
