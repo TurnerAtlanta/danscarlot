@@ -1,70 +1,29 @@
 name = "danscarlot"
-main = "src/index.ts"
+main = "worker/index.ts"
 compatibility_date = "2025-02-11"
-compatibility_flags = ["nodejs_compat"]
 
 [observability]
 enabled = true
 head_sampling_rate = 1
 
 [assets]
-directory = "./public/"
+directory = "./dist/"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
 
 [[durable_objects.bindings]]
-name = "CARLOT_AGENT"
-class_name = "CarLotAgent"
+name = "CAR_STORE"
+class_name = "CarStore"
 
 [[migrations]]
 tag = "v1"
-new_sqlite_classes = ["CarLotAgent"]
+new_classes = ["CarStore"]
 
-[[kv_namespaces]]
-binding = "AUTH_KV"
-id = "029a6b1c13a24c89b0dbd39e4b5f6021"
-preview_id = "029a6b1c13a24c89b0dbd39e4b5f6021"
-
-[[kv_namespaces]]
-binding = "INTEGRATIONS_KV"
-id = "e4d0112599154da2a2573d5a37926f08"
-preview_id = "e4d0112599154da2a2573d5a37926f08"
-
-[[queues.producers]]
-queue = "sync-queue"
-binding = "SYNC_QUEUE"
-
-[[queues.consumers]]
-queue = "sync-queue"
-max_batch_size = 10
-max_batch_timeout = 30
-max_retries = 3
-dead_letter_queue = "sync-dlq"
-
-[vars]
-WAYNE_REEVES_API_URL = "https://api.waynereeves.com/v1"
-TRUECAR_DEALER_ID = ""
-KBB_DEALER_ID = ""
-
-# Custom domain configuration
+# Custom domain configuration - single origin serves both the SPA and /api/*
 [[routes]]
 pattern = "danscarlot.turneratlanta.com/*"
 zone_id = "621eb120d82997c4af1a61d0a6ecce9a"
 
-[[routes]]
-pattern = "api.danscarlot.turneratlanta.com/*"
-zone_id = "621eb120d82997c4af1a61d0a6ecce9a"
-
-[[routes]]
-pattern = "*.danscarlot.turneratlanta.com/*"  
-zone_id = "621eb120d82997c4af1a61d0a6ecce9a"
-
-# Production environment (optional - use for separate prod config)
-[env.production]
-name = "danscarlot-prod"
-vars = { NODE_ENV = "production" }
-
-# Staging environment (optional - use for testing)
+# Staging environment (used for testing before promoting to production)
 [env.staging]
 name = "danscarlot-staging"
-vars = { NODE_ENV = "staging" }

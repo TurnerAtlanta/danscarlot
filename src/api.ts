@@ -1,4 +1,5 @@
-const API_BASE = 'https://api.danscarlot.turneratlanta.com/api'
+// Same-origin API: the Worker serves both the SPA and /api/* from one domain.
+const API_BASE = '/api'
 
 export interface Car {
   id: string

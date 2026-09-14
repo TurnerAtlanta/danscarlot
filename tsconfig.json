@@ -17,5 +17,5 @@
     "jsx": "react-jsx"
   },
   "include": ["src"],
-  "exclude": ["src/index.ts", "api", "worker"]
+  "exclude": ["worker"]
 }

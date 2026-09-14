@@ -1,8 +1,10 @@
-git add .
-git commit -m "deploy git"
-git push 
+#!/bin/sh
+# Deploys the app: builds the frontend, then deploys the Worker (static assets + API).
+# Requires: `wrangler login` beforehand, or CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID
+# set as environment variables (e.g. injected by your CI secrets store).
+# Never hardcode credentials in this file or commit them to git.
+set -e
 
-export CLOUDFLARE_API_TOKEN = "***REMOVED-CLOUDFLARE-TOKEN***"
-export CLOUDFKARE_ACCOUNT_ID = "18c8e61a3669253dcfd0c7eec6be36a3"
+npm run build
+npx wrangler deploy
 
-wrangler deploy --name danscarlot
