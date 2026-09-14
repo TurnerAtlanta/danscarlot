@@ -6,6 +6,11 @@ compatibility_date = "2025-02-11"
 enabled = true
 head_sampling_rate = 1
 
+[[D1_database]]
+name = "danscarlot-db"
+binding = "DB"
+id = "59eeb9c6-7659-4fa3-a8b6-858d6a9553d2"
+
 [assets]
 directory = "./dist/"
 binding = "ASSETS"
