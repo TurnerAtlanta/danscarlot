@@ -1,6 +1,11 @@
 // Same-origin API: the Worker serves both the SPA and /api/* from one domain.
 const API_BASE = '/api'
 
+export interface FinancialEntry {
+  label: string
+  amount: number
+}
+
 export interface Car {
   id: string
   make: string
@@ -9,8 +14,25 @@ export interface Car {
   price: number
   mileage: number
   image?: string
+  images?: string[]
   vin: string
   description?: string
+  trim?: string
+  trimLevel?: string
+  status?: 'inventory' | 'sold'
+  purchaseDate?: string
+  soldDate?: string
+  purchasePrice?: number
+  salePrice?: number
+  fundingSource?: string
+  fundingSourceEntries?: FinancialEntry[]
+  fundingSources?: FinancialEntry[]
+  maintenance?: number
+  maintenence?: number
+  maintenanceCosts?: FinancialEntry[]
+  maintenenceCosts?: FinancialEntry[]
+  addedCost?: number
+  addedCosts?: FinancialEntry[]
 }
 
 export async function getCars(): Promise<Car[]> {
