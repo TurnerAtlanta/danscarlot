@@ -514,7 +514,8 @@ if ! grep -q 'd1_databases' wrangler.toml; then
 [[d1_databases]]
 binding = "DB"
 database_name = "danscarlot-db"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "59eeb9c6-7659-4fa3-a8b6-858d6a9553d2"
+
 migrations_dir = "db/migrations"
 TOML
 fi

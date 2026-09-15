@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { addCar, type Car } from '../../api'
+import { CAR_MAKES, MODEL_OPTIONS_LIST, TRIM_OPTIONS, YEAR_OPTIONS } from './carOptions'
 
 function parseEntryText(value: string): { label: string; amount: number }[] {
   return value
@@ -93,42 +94,138 @@ export default function AddCar() {
   return (
     <div className="max-w-2xl space-y-4">
       <h1 className="text-lg font-semibold">Add car</h1>
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="grid grid-cols-2 gap-3">
-          <input name="make" placeholder="Make" required className="input" />
-          <input name="model" placeholder="Model" required className="input" />
+      <datalist id="make-options">
+        {CAR_MAKES.map((make) => (
+          <option key={make} value={make} />
+        ))}
+      </datalist>
+      <datalist id="model-options">
+        {MODEL_OPTIONS_LIST.map((model) => (
+          <option key={model} value={model} />
+        ))}
+      </datalist>
+      <datalist id="trim-options">
+        {TRIM_OPTIONS.map((trim) => (
+          <option key={trim} value={trim} />
+        ))}
+      </datalist>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="make" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Make</label>
+              <input id="make" name="make" list="make-options" placeholder="Make" required className="input" />
+            </div>
+            <div>
+              <label htmlFor="model" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Model</label>
+              <input id="model" name="model" list="model-options" placeholder="Model" required className="input" />
+            </div>
+          </div>
         </div>
-        <div className="grid grid-cols-4 gap-3">
-          <input name="year" type="number" placeholder="Year" required className="input" />
-          <input name="trim" placeholder="Trim level" className="input" />
-          <input name="price" type="number" placeholder="Sale price" required className="input" />
-          <input name="mileage" type="number" placeholder="Mileage" required className="input" />
+
+        <div className="space-y-2">
+          <div className="grid grid-cols-4 gap-3">
+            <div>
+              <label htmlFor="year" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Year</label>
+              <select id="year" name="year" defaultValue={new Date().getFullYear()} required className="input">
+                {YEAR_OPTIONS.map((year) => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="trim" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Trim level</label>
+              <input id="trim" name="trim" list="trim-options" placeholder="Trim level" className="input" />
+            </div>
+            <div>
+              <label htmlFor="price" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Sale price</label>
+              <input id="price" name="price" type="number" placeholder="Sale price" required className="input" />
+            </div>
+            <div>
+              <label htmlFor="mileage" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Mileage</label>
+              <input id="mileage" name="mileage" type="number" placeholder="Mileage" required className="input" />
+            </div>
+          </div>
         </div>
-        <div className="grid grid-cols-3 gap-3">
-          <input name="purchasePrice" type="number" placeholder="Purchase price" className="input" />
-          <select name="status" defaultValue="inventory" className="input">
-            <option value="inventory">Inventory</option>
-            <option value="sold">Sold</option>
-          </select>
-          <input name="vin" placeholder="VIN" required className="input" />
+
+        <div className="space-y-2">
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label htmlFor="purchasePrice" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Purchase price</label>
+              <input id="purchasePrice" name="purchasePrice" type="number" placeholder="Purchase price" className="input" />
+            </div>
+            <div>
+              <label htmlFor="status" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Status</label>
+              <select id="status" name="status" defaultValue="inventory" className="input">
+                <option value="inventory">Inventory</option>
+                <option value="sold">Sold</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="vin" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">VIN</label>
+              <input id="vin" name="vin" placeholder="VIN" required className="input" />
+            </div>
+          </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <input name="purchaseDate" type="date" className="input" />
-          <input name="soldDate" type="date" className="input" />
+
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="purchaseDate" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Purchase date</label>
+              <input id="purchaseDate" name="purchaseDate" type="date" className="input" />
+            </div>
+            <div>
+              <label htmlFor="soldDate" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Sold date</label>
+              <input id="soldDate" name="soldDate" type="date" className="input" />
+            </div>
+          </div>
         </div>
-        <div className="grid gap-3 md:grid-cols-2">
-          <input name="fundingSource" placeholder="Funding source" className="input" />
-          <textarea name="fundingSources" placeholder="Bank: 12000\nCash: 5000" rows={3} className="input" />
+
+        <div className="space-y-2">
+          <div className="grid gap-3 md:grid-cols-2">
+            <div>
+              <label htmlFor="fundingSource" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Funding source</label>
+              <input id="fundingSource" name="fundingSource" placeholder="Funding source" className="input" />
+            </div>
+            <div>
+              <label htmlFor="fundingSources" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Funding source entries</label>
+              <textarea id="fundingSources" name="fundingSources" placeholder="Bank: 12000\nCash: 5000" rows={3} className="input" />
+            </div>
+          </div>
         </div>
-        <div className="grid gap-3 md:grid-cols-2">
-          <textarea name="maintenanceCosts" placeholder="Oil service: 280\nBrake work: 440" rows={3} className="input" />
-          <textarea name="addedCosts" placeholder="Tires: 900\nDetailing: 150" rows={3} className="input" />
+
+        <div className="space-y-2">
+          <div className="grid gap-3 md:grid-cols-2">
+            <div>
+              <label htmlFor="maintenanceCosts" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Maintenance costs</label>
+              <textarea id="maintenanceCosts" name="maintenanceCosts" placeholder="Oil service: 280\nBrake work: 440" rows={3} className="input" />
+            </div>
+            <div>
+              <label htmlFor="addedCosts" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Added costs</label>
+              <textarea id="addedCosts" name="addedCosts" placeholder="Tires: 900\nDetailing: 150" rows={3} className="input" />
+            </div>
+          </div>
         </div>
-        <div className="grid gap-3 md:grid-cols-2">
-          <input name="photos" type="file" accept="image/*" multiple className="input file:mr-3 file:rounded file:border-0 file:bg-brand file:px-2 file:py-1 file:text-white" />
-          <input name="image" placeholder="Image URL (optional)" className="input" />
+
+        <div className="space-y-2">
+          <div className="grid gap-3 md:grid-cols-2">
+            <div>
+              <label htmlFor="photos" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Vehicle photos</label>
+              <input id="photos" name="photos" type="file" accept="image/*" multiple className="input file:mr-3 file:rounded file:border-0 file:bg-brand file:px-2 file:py-1 file:text-white" />
+            </div>
+            <div>
+              <label htmlFor="image" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Image URL</label>
+              <input id="image" name="image" placeholder="Image URL (optional)" className="input" />
+            </div>
+          </div>
         </div>
-        <textarea name="description" placeholder="Description (optional)" rows={3} className="input" />
+
+        <div className="space-y-2">
+          <label htmlFor="description" className="block text-xs font-medium uppercase tracking-wide text-slate-400">Description</label>
+          <textarea id="description" name="description" placeholder="Description (optional)" rows={3} className="input" />
+        </div>
+
         <button type="submit" disabled={mutation.isPending} className="inline-flex items-center rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-60">
           {mutation.isPending ? 'Saving…' : 'Save car'}
         </button>

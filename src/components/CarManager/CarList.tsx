@@ -145,7 +145,8 @@ export default function CarList() {
                   <div>Profit: {formatCurrency(net)}</div>
                 </div>
                 {car.description && <p className="text-xs text-slate-300 line-clamp-2">{car.description}</p>}
-                <div className="flex gap-2 pt-1">
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Link to={`/cars/${car.id}`} className="inline-flex items-center gap-1 rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800">View</Link>
                   <Link to={`/edit/${car.id}`} className="inline-flex items-center gap-1 rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800"><Pencil className="w-3 h-3" />Edit</Link>
                   <button type="button" onClick={() => deleteMutation.mutate(car.id)} className="inline-flex items-center gap-1 rounded-md border border-red-500/60 px-2 py-1 text-xs text-red-300 hover:bg-red-500/10"><Trash2 className="w-3 h-3" />Delete</button>
                 </div>

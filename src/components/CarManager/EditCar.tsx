@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { getCar, updateCar, type Car } from '../../api'
+import { CAR_MAKES, MODEL_OPTIONS_LIST, TRIM_OPTIONS, YEAR_OPTIONS } from './carOptions'
 
 function formatEntryList(entries?: { label: string; amount: number }[]) {
   if (!entries || entries.length === 0) return ''
@@ -131,40 +132,111 @@ export default function EditCar() {
   return (
     <div className="max-w-2xl space-y-4">
       <h1 className="text-lg font-semibold">Edit car</h1>
+      <datalist id="make-options">
+        {CAR_MAKES.map((make) => (
+          <option key={make} value={make} />
+        ))}
+      </datalist>
+      <datalist id="model-options">
+        {MODEL_OPTIONS_LIST.map((model) => (
+          <option key={model} value={model} />
+        ))}
+      </datalist>
+      <datalist id="trim-options">
+        {TRIM_OPTIONS.map((trim) => (
+          <option key={trim} value={trim} />
+        ))}
+      </datalist>
+
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
-          <input name="make" defaultValue={car.make} placeholder="Make" required className="input" />
-          <input name="model" defaultValue={car.model} placeholder="Model" required className="input" />
+          <div>
+            <label htmlFor="make" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Make</label>
+            <input id="make" name="make" list="make-options" defaultValue={car.make} placeholder="Make" required className="input" />
+          </div>
+          <div>
+            <label htmlFor="model" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Model</label>
+            <input id="model" name="model" list="model-options" defaultValue={car.model} placeholder="Model" required className="input" />
+          </div>
         </div>
         <div className="grid grid-cols-4 gap-3">
-          <input name="year" type="number" defaultValue={car.year} placeholder="Year" required className="input" />
-          <input name="trim" defaultValue={car.trim ?? car.trimLevel ?? ''} placeholder="Trim level" className="input" />
-          <input name="price" type="number" defaultValue={car.price} placeholder="Sale price" required className="input" />
-          <input name="mileage" type="number" defaultValue={car.mileage} placeholder="Mileage" required className="input" />
+          <div>
+            <label htmlFor="year" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Year</label>
+            <select id="year" name="year" defaultValue={String(car.year)} required className="input">
+              {YEAR_OPTIONS.map((year) => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="trim" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Trim level</label>
+            <input id="trim" name="trim" list="trim-options" defaultValue={car.trim ?? car.trimLevel ?? ''} placeholder="Trim level" className="input" />
+          </div>
+          <div>
+            <label htmlFor="price" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Sale price</label>
+            <input id="price" name="price" type="number" defaultValue={car.price} placeholder="Sale price" required className="input" />
+          </div>
+          <div>
+            <label htmlFor="mileage" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Mileage</label>
+            <input id="mileage" name="mileage" type="number" defaultValue={car.mileage} placeholder="Mileage" required className="input" />
+          </div>
         </div>
         <div className="grid grid-cols-3 gap-3">
-          <input name="purchasePrice" type="number" defaultValue={car.purchasePrice ?? 0} placeholder="Purchase price" className="input" />
-          <select name="status" defaultValue={car.status ?? 'inventory'} className="input">
-            <option value="inventory">Inventory</option>
-            <option value="sold">Sold</option>
-          </select>
-          <input name="vin" defaultValue={car.vin} placeholder="VIN" required className="input" />
+          <div>
+            <label htmlFor="purchasePrice" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Purchase price</label>
+            <input id="purchasePrice" name="purchasePrice" type="number" defaultValue={car.purchasePrice ?? 0} placeholder="Purchase price" className="input" />
+          </div>
+          <div>
+            <label htmlFor="status" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Status</label>
+            <select id="status" name="status" defaultValue={car.status ?? 'inventory'} className="input">
+              <option value="inventory">Inventory</option>
+              <option value="sold">Sold</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="vin" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">VIN</label>
+            <input id="vin" name="vin" defaultValue={car.vin} placeholder="VIN" required className="input" />
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <input name="purchaseDate" type="date" defaultValue={car.purchaseDate ?? ''} className="input" />
-          <input name="soldDate" type="date" defaultValue={car.soldDate ?? ''} className="input" />
+          <div>
+            <label htmlFor="purchaseDate" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Purchase date</label>
+            <input id="purchaseDate" name="purchaseDate" type="date" defaultValue={car.purchaseDate ?? ''} className="input" />
+          </div>
+          <div>
+            <label htmlFor="soldDate" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Sold date</label>
+            <input id="soldDate" name="soldDate" type="date" defaultValue={car.soldDate ?? ''} className="input" />
+          </div>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
-          <input name="fundingSource" defaultValue={car.fundingSource ?? ''} placeholder="Funding source" className="input" />
-          <textarea name="fundingSources" defaultValue={formatEntryList(car.fundingSources)} placeholder="Bank: 12000\nCash: 5000" rows={3} className="input" />
+          <div>
+            <label htmlFor="fundingSource" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Funding source</label>
+            <input id="fundingSource" name="fundingSource" defaultValue={car.fundingSource ?? ''} placeholder="Funding source" className="input" />
+          </div>
+          <div>
+            <label htmlFor="fundingSources" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Funding source entries</label>
+            <textarea id="fundingSources" name="fundingSources" defaultValue={formatEntryList(car.fundingSources)} placeholder="Bank: 12000\nCash: 5000" rows={3} className="input" />
+          </div>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
-          <textarea name="maintenanceCosts" defaultValue={formatEntryList(car.maintenanceCosts)} placeholder="Oil service: 280\nBrake work: 440" rows={3} className="input" />
-          <textarea name="addedCosts" defaultValue={formatEntryList(car.addedCosts)} placeholder="Tires: 900\nDetailing: 150" rows={3} className="input" />
+          <div>
+            <label htmlFor="maintenanceCosts" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Maintenance costs</label>
+            <textarea id="maintenanceCosts" name="maintenanceCosts" defaultValue={formatEntryList(car.maintenanceCosts)} placeholder="Oil service: 280\nBrake work: 440" rows={3} className="input" />
+          </div>
+          <div>
+            <label htmlFor="addedCosts" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Added costs</label>
+            <textarea id="addedCosts" name="addedCosts" defaultValue={formatEntryList(car.addedCosts)} placeholder="Tires: 900\nDetailing: 150" rows={3} className="input" />
+          </div>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
-          <input name="photos" type="file" accept="image/*" multiple className="input file:mr-3 file:rounded file:border-0 file:bg-brand file:px-2 file:py-1 file:text-white" />
-          <input name="image" defaultValue={car.image ?? car.images?.[0] ?? ''} placeholder="Image URL (optional)" className="input" />
+          <div>
+            <label htmlFor="photos" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Vehicle photos</label>
+            <input id="photos" name="photos" type="file" accept="image/*" multiple className="input file:mr-3 file:rounded file:border-0 file:bg-brand file:px-2 file:py-1 file:text-white" />
+          </div>
+          <div>
+            <label htmlFor="image" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Image URL</label>
+            <input id="image" name="image" defaultValue={car.image ?? car.images?.[0] ?? ''} placeholder="Image URL (optional)" className="input" />
+          </div>
         </div>
 
         {(car.images && car.images.length > 0) || car.image ? (
@@ -178,7 +250,10 @@ export default function EditCar() {
           </div>
         ) : null}
 
-        <textarea name="description" defaultValue={car.description} placeholder="Description (optional)" rows={3} className="input" />
+        <div>
+          <label htmlFor="description" className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">Description</label>
+          <textarea id="description" name="description" defaultValue={car.description} placeholder="Description (optional)" rows={3} className="input" />
+        </div>
         <button type="submit" disabled={mutation.isPending} className="inline-flex items-center rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-60">
           {mutation.isPending ? 'Saving…' : 'Save changes'}
         </button>

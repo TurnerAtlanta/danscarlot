@@ -6,6 +6,7 @@ import Layout from './components/Layout'
 import CarList from './components/CarManager/CarList'
 import AddCar from './components/CarManager/AddCar'
 import EditCar from './components/CarManager/EditCar'
+import CarDetail from './components/CarManager/CarDetail'
 import { ThemeProvider } from './ThemeContext'
 
 const queryClient = new QueryClient()
@@ -33,6 +34,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<CarList />} />
           <Route path="/add" element={<AddCar />} />
+          <Route path="/cars/:id" element={<CarDetail />} />
           <Route path="/edit/:id" element={<EditCar />} />
         </Routes>
         <Toaster position="top-right" />
